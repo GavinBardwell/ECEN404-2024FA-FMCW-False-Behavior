@@ -1,22 +1,18 @@
-import logo from './logo.svg';
 import './App.css';
-
+import { useState } from 'react' /*used for updating the state of an object*/
+import { BrowserRouter as Router, Routes, Route, BrowserRouter, createBrowserRouter, createRoutesFromElements } from "react-router-dom";
+import Navbar from './Navbar';
 function App() {
   return (
     <div className="App">
+      <Router>
+        <Navbar/>
+        <Routes>
+        <Route index element={<index />}></Route>
+        </Routes>
+      </Router>
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <p>hello world</p>
       </header>
     </div>
   );
