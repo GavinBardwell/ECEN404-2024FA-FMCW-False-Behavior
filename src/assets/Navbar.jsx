@@ -11,14 +11,14 @@ const Navbar = () => {
     return (
         <div className='header_page'>
             <div className='header'>
-                <ul class="nav">
-                    <li class="nav-item">
+                <ul className="nav">
+                    <li className="nav-item">
                         <Link to='/'>Overview</Link>
                     </li>
-                    <li class="nav-item">
+                    <li className="nav-item">
                         <Link to='/Runs'>Individual Runs</Link>
                     </li>
-                    <li class="nav-item">
+                    <li className="nav-item">
                         <Link to='/Data'>Data Trends</Link>
                     </li>
                 </ul>
