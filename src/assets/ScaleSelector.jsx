@@ -16,7 +16,6 @@ function ScaleSelector({ axis, onScaleChange }) {
       <select id={`scale-select-${axis}`} value={scale} onChange={handleChange}>
         <option value="log">Log</option>
         <option value="linear">Linear</option>
-        <option value="dB">dB</option>
       </select>
     </div>
   );

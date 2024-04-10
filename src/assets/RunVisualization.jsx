@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import mockData from './RunDetails.json';
 import { scaleLog, scaleLinear } from 'd3-scale';
 
 
@@ -10,37 +9,30 @@ const scaleType = (type) => {
         return scaleLinear();
       case 'log':
         return scaleLog();
-      case 'dB':
-        // Assuming your data isn't already in dB. If it is, use 'linear' instead.
-        return 'linear'; // You would need to transform your data to dB before plotting.
       default:
         return 'linear';
     }
   };
+const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#413ea0', '#1f77b4', '#d62728', '#2ca02c', '#9467bd', '#8c564b'];
 
-
-const RunDetailsChart = ({ xScale = 'linear', yScale = 'linear' }) => {
+const RunDetailsChart = ({ xScale = 'linear', yScale = 'linear', inputData }) => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
     const transformData = (rawData) => {
         let transformed = [];
-        // If yScale is 'dB', transform the data accordingly. Else, leave as is.
-        const isDbScale = yScale === 'dB';
         for (let i = 0; i < rawData.Runs[0].power.length; i++) {
           let point = { time: i }; // Time in ms
           rawData.Runs.forEach(run => {
-            point[`Run ${run.id}`] = isDbScale ? 10 * Math.log10(run.power[i]) : run.power[i];
+            point[`Run ${run.id}`] = run.power[i];
           });
           transformed.push(point);
         }
         return transformed;
       };
-
-    const dataForChart = transformData(mockData, yScale);
+    const dataForChart = transformData(inputData, yScale);
     setData(dataForChart);
-    console.log(dataForChart)
-  }, [xScale, yScale]); // Updates whenever yScale changes
+  }, [xScale, yScale, inputData]); // Updates whenever yScale changes
 
   return (
     <LineChart
@@ -60,7 +52,7 @@ const RunDetailsChart = ({ xScale = 'linear', yScale = 'linear' }) => {
       <Tooltip />
       <Legend />
       {data[0] && Object.keys(data[0]).filter(key => key !== 'time').map((key, idx) => (
-        <Line type="monotone" dataKey={key} stroke={`#${Math.floor(Math.random()*16777215).toString(16)}`} key={idx} />
+        <Line type="monotone" dataKey={key} stroke={colors[idx % colors.length]} key={idx} />
       ))}
     </LineChart>
   );
