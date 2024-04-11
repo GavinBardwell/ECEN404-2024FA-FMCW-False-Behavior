@@ -22,3 +22,4 @@ function ScaleSelector({ axis, onScaleChange }) {
 }
 
 export default ScaleSelector;
+

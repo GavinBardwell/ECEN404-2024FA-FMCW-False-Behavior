@@ -19,20 +19,11 @@ const RunDetailsChart = ({ xScale = 'linear', yScale = 'linear', inputData }) =>
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    const transformData = (rawData) => {
-        let transformed = [];
-        for (let i = 0; i < rawData.Runs[0].power.length; i++) {
-          let point = { time: i }; // Time in ms
-          rawData.Runs.forEach(run => {
-            point[`Run ${run.id}`] = run.power[i];
-          });
-          transformed.push(point);
-        }
-        return transformed;
-      };
-    const dataForChart = transformData(inputData, yScale);
-    setData(dataForChart);
-  }, [xScale, yScale, inputData]); // Updates whenever yScale changes
+    setData(inputData); // inputData is now already transformed
+    console.log("input data for Graph")
+    console.log(inputData);
+  }, [inputData]); // Dependency on inputData
+  
 
   return (
     <LineChart
