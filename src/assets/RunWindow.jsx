@@ -5,31 +5,26 @@ import mockData from './RunDetails.json';
 import RunsTable from './RunTable';
 import VariableAxisSelector from './VariableAxisSelector';
 
-
-const transformData = (rawData) => {
-  let transformed = [];
-  if (rawData.Runs.length === 0) return transformed; // Early return if no runs are selected
-
-  for (let i = 0; i < rawData.Runs[0].power.length; i++) {
-    let point = { time: i }; // Assuming time in ms
-    rawData.Runs.forEach(run => {
-      point[`Run ${run.id}`] = run.power[i];
-    });
-    transformed.push(point);
+const transformData = (totalSelectedRuns, X, Y) => {
+  return {
+    Runs: totalSelectedRuns.Runs.map(run => ({
+      [X]: run[X],
+      [Y]: run[Y]
+    }))
   }
-  return transformed;
-};
+}
 
 function RunWindow() {
   const [scales, setScales] = useState({ X: 'linear', Y: 'linear'});
   const [selectedRuns, setSelectedRuns] = useState({Runs: []});
-  const [variableForAxis, setVariableForAxis] = useState({ X: 'time', Y: ''});
+  const [variableForAxis, setVariableForAxis] = useState({ X: '', Y: ''});
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
-    const transformed = transformData(selectedRuns);
-    setChartData(transformed);
-  }, [selectedRuns]);
+    console.log(variableForAxis.X + variableForAxis.Y)
+    const transformVal = transformData(selectedRuns, variableForAxis.X, variableForAxis.Y)
+    setChartData(transformVal);
+  }, [selectedRuns, variableForAxis]);
 
   const handleScaleChange = (axis, selectedScale) => {
     // Update the scales state with new values for either x or y
@@ -78,8 +73,8 @@ function RunWindow() {
       <p>
           Current Selected Run Info
         </p>
-        {selectedRuns.Runs.length > 0 ? (
-          <RunDetailsChart xScale={scales.X} yScale={scales.Y} inputData={chartData}/>
+        {((selectedRuns.Runs.length > 0) && (variableForAxis.X !== '' && variableForAxis.Y !== '')) ? (
+          <RunDetailsChart xScale={scales.X} yScale={scales.Y} inputData={chartData} xKey = {variableForAxis.X}yKey = {variableForAxis.Y}/>
         ) : (
           <p>No selected data</p>
         )}
