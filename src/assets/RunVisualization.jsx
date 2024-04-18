@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { scaleLog, scaleLinear } from 'd3-scale';
 
 
@@ -15,53 +15,51 @@ const scaleType = (type) => {
   };
 const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#413ea0', '#1f77b4', '#d62728', '#2ca02c', '#9467bd', '#8c564b'];
 
-const RunDetailsChart = ({ xScale = 'linear', yScale = 'linear', inputData, xKey, yKey }) => {
+const RunDetailsChart = ({ xScale = 'linear', yScale = 'linear', inputData }) => {
   const [data, setData] = useState([]);
+  const [xKey, setXKey] = useState('');
+  const [yKey, setYKey] = useState('');
 
   useEffect(() => {
-    if (inputData && inputData.Runs) {
+    //sets the axis names to use... better than feeding it in because this way you know for sure that it is there
+    setXKey(Object.keys((inputData.Runs)[0])[0])
+    setYKey(Object.keys((inputData.Runs)[0])[1])
+    if (inputData.Runs) {
       // Map each run to its own series of data points
-      console.log(inputData.Runs)
-      console.log(Object.keys(inputData)[0])
-      const newData = inputData.Runs.map((run, index) => ({
-        data: run[xKey].map((x, i) => ({
-          [xKey]: x,  // Dynamic xKey from the run
-          [yKey]: run[yKey][i],  // Dynamic yKey from the same run
-        })),
+      const newData = inputData.Runs.map((run, i) => ({
+        data: run[Object.keys((inputData.Runs)[0])[0]].map((x, i) => ({
+          [Object.keys((inputData.Runs)[0])[0]]: x,  // Dynamic xKey from the run
+          [Object.keys((inputData.Runs)[0])[1]]: run[Object.keys((inputData.Runs)[0])[1]][i],  // Dynamic yKey from the same run
+        }))
       }));
-      //console.log(newData)
       setData(newData);
     }
-  }, [inputData, xKey, yKey]);
-  
+  }, [inputData]);
+
+  useEffect(() => {
+    console.log(data)
+  }, [data])
 
   return (
-   <LineChart
-      width={800}
-      height={400}
-      data={data}
-      margin={{
-        top: 5,
-        right: 30,
-        left: 20,
-        bottom: 5,
-      }}
-    >
+    <ResponsiveContainer width="100%" height="100%">
+   <LineChart>
       <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey={xKey} scale={scaleType(xScale)} label={{ value: 'Time (ms)', position: 'insideBottomRight', offset: 0 }} />
-      <YAxis scale={scaleType(yScale)} label={{ value: 'Power', angle: -90, position: 'insideLeft'}} domain={['auto', 'auto']} />
+      <XAxis dataKey={xKey} scale={scaleType(xScale)} domain={['dataMin', 'dataMax']} />
+      <YAxis scale={scaleType(yScale)} label={{ value: [yKey], angle: -90, position: 'insideLeft'}} domain={['dataMin', 'dataMax']} />
       <Tooltip />
       <Legend />
       {data.map((run, idx) => (
-  <Line
-    type="monotone"
-    data={run.data}  // Correctly assign data to each Line
-    dataKey={yKey}   // Correctly point to the property in the data points
-    stroke={colors[idx % colors.length]}
-    key={idx}  // Adding a key for React's list rendering
-  />
-))}
+        <Line
+          type="monotone"
+          data={run.data}  // Correctly assign data to each Line
+          dataKey={yKey}   // Correctly point to the property in the data points
+          stroke={colors[idx % colors.length]}
+          key={idx}  // Adding a key for React's list rendering
+          name = {idx}
+        />
+      ))}
     </LineChart>
+    </ResponsiveContainer>
   );
 };
 

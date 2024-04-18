@@ -1,10 +1,6 @@
 .App {
   text-align: center;
-}
-
-
-.App-window {
-  background-color: #fff2d9;
+  background-color: #d8d8d8;
   min-height: 100vh;
   display: flex;
   flex-direction: column;

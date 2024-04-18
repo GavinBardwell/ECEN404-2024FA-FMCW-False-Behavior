@@ -1,0 +1,30 @@
+.run-container {
+    display: grid;
+    grid-template-columns: 1fr 3fr; /* Split into two columns */
+    height: 100%; /* Full height */
+    padding: 10px; /* Padding around the container */
+    gap: 15px; /* Space between columns acts as the line */
+    box-sizing: border-box; /* Includes padding and border in the width and height */
+}
+
+.DifferentSelections {
+    padding: 10px;
+}
+
+.AxisSelectors {
+    border-style: solid;
+    border-radius: 1px;
+    border-width: 1px;
+    padding: 10px;
+    margin: 20px;
+}
+
+.graph-window {
+    align-items: center;
+    border-left: 1px solid #000; /* Thick right border as the line */
+}
+
+.Run-Box {
+    height: 50vh;
+    width: 100%;
+}

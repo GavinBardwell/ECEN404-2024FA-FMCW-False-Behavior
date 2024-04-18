@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 function VariableAxisSelector({ axis, currentRuns, onAxisVarChange }) {
   // Assume the structure of currentRuns objects is consistent
   // and use the keys from the first run to generate the options.
-  const [selectedVar, setSelectedVar] = useState();
+  const [selectedVar, setSelectedVar] = useState('');
   
   // Assuming all runs have the same structure,
   // extract the keys from the first run to use as options.
@@ -13,10 +13,10 @@ function VariableAxisSelector({ axis, currentRuns, onAxisVarChange }) {
 
   useEffect(() => {
     // Initialize with the first available variable, if not set
-    if (variableOptions.length > 0 && !selectedVar) {
-      setSelectedVar(variableOptions[0]);
-    }
-  }, [variableOptions, selectedVar]);
+   ///if (variableOptions.length > 0 && !selectedVar) {
+     // setSelectedVar(variableOptions[0]);
+   // }
+  }, [variableOptions]);
 
   const handleChange = (event) => {
     const newVar = event.target.value;
@@ -28,7 +28,7 @@ function VariableAxisSelector({ axis, currentRuns, onAxisVarChange }) {
     <div>
       <label htmlFor={`variable-select-${axis}`}>{`Select variable for ${axis} axis: `}</label>
       <select id={`variable-select-${axis}`} value={selectedVar} onChange={handleChange}>
-      <option key='' value=''></option>
+      <option value = '' hidden disabled>Select an option</option>
         {variableOptions.map((option) => (
           <option key={option} value={option}>{option}</option>
         ))}

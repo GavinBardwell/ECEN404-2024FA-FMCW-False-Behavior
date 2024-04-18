@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+import "./RunTable.css"
 const RunsTable = ({ inputRuns, selectedRuns, onRunSelectionChange }) => {
   const [runData, setRunData] = useState([])
   useEffect(() => {
@@ -11,7 +11,7 @@ const RunsTable = ({ inputRuns, selectedRuns, onRunSelectionChange }) => {
   // You might pass setSelectedRuns to a context, or lift state up to use it in other components
 
   return (
-    <table>
+    <table className='Run-Table'>
       <thead>
         <tr>
           <th>ID</th>

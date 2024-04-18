@@ -8,7 +8,12 @@ import RunWindow from './assets/RunWindow';
 function App() {
   return (
     <div className="App">
-      <Router>
+      <RunWindow />
+
+    </div>
+  );
+}
+  /*      <Router>
         <Navbar/>
         <div className="App-window">
         <Routes>
@@ -16,9 +21,5 @@ function App() {
           <Route element={<RunWindow/>} path="Runs"></Route>
         </Routes>
         </div>
-      </Router>
-    </div>
-  );
-}
-
+      </Router>*/ 
 export default App;

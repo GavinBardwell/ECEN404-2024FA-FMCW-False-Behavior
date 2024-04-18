@@ -4,27 +4,23 @@ import RunDetailsChart from './RunVisualization'; // Adjust the import path if n
 import mockData from './RunDetails.json';
 import RunsTable from './RunTable';
 import VariableAxisSelector from './VariableAxisSelector';
+import './RunWindow.css'
 
-const transformData = (totalSelectedRuns, X, Y) => {
-  return {
-    Runs: totalSelectedRuns.Runs.map(run => ({
-      [X]: run[X],
-      [Y]: run[Y]
-    }))
-  }
-}
 
 function RunWindow() {
   const [scales, setScales] = useState({ X: 'linear', Y: 'linear'});
   const [selectedRuns, setSelectedRuns] = useState({Runs: []});
   const [variableForAxis, setVariableForAxis] = useState({ X: '', Y: ''});
-  const [chartData, setChartData] = useState([]);
-
-  useEffect(() => {
-    console.log(variableForAxis.X + variableForAxis.Y)
-    const transformVal = transformData(selectedRuns, variableForAxis.X, variableForAxis.Y)
-    setChartData(transformVal);
-  }, [selectedRuns, variableForAxis]);
+  const [chartData, setChartData] = useState({Runs: []})
+  
+  const transformData = (totalSelectedRuns, X, Y) => {
+    return {
+      Runs: totalSelectedRuns.Runs.map(run => ({
+        [X]: run[X],
+        [Y]: run[Y]
+      }))
+    }
+  }
 
   const handleScaleChange = (axis, selectedScale) => {
     // Update the scales state with new values for either x or y
@@ -35,13 +31,19 @@ function RunWindow() {
   );
   }
   const handleVariableForAxisChange = (axis, selectedVariableForAxis) => {
-  setVariableForAxis(prevVariableForAxis => ({
-    ...prevVariableForAxis,
-    [axis]: selectedVariableForAxis,
-  }),
-  );
+    setVariableForAxis(prevVariableForAxis => {
+      // Check if the other axis already has the same variable assigned
+      const otherAxis = axis === 'X' ? 'Y' : 'X';
+      if (prevVariableForAxis[otherAxis] === selectedVariableForAxis) {
+        alert('Please choose a different variable for each axis.');
+        return prevVariableForAxis; // Return previous state without changes
+      }
+      return {
+        ...prevVariableForAxis,
+        [axis]: selectedVariableForAxis,
+      };
+    });
   }
-
   const handleRunSelectionChange = (run) => {
     setSelectedRuns(prev => {
       const isAlreadySelected = prev.Runs.some(r => r.id === run.id);
@@ -58,26 +60,36 @@ function RunWindow() {
       }
     });
   };
+  useEffect(() => {
+    //comand picks only the selected X and Y axis from the selected runs
+    if (selectedRuns.Runs.length > 0 && variableForAxis.X && variableForAxis.Y) {
+      const transformedData = transformData(selectedRuns, variableForAxis.X, variableForAxis.Y)
+      setChartData(transformedData)
+    }
+  }, [selectedRuns, variableForAxis]);
+
+  useEffect(() => {
+  }, [chartData])
+
   return (
     
-    <div className="App">
-      <div>
+    <div className="run-container">
+      <div className = "DifferentSelections">
+      <div className="Run-Box">
         <RunsTable inputRuns={mockData} selectedRuns={selectedRuns.Runs} onRunSelectionChange={handleRunSelectionChange}/>
       </div>
-      <div className='Selectors'>
-        <div className='axis-selector'><ScaleSelector axis="X" onScaleChange={handleScaleChange} /> <VariableAxisSelector axis="X" currentRuns={mockData} onAxisVarChange={handleVariableForAxisChange}/></div>
-        <div className='axis-selector'><ScaleSelector axis="Y" onScaleChange={handleScaleChange} /> <VariableAxisSelector axis="Y" currentRuns={mockData} onAxisVarChange={handleVariableForAxisChange}/></div>
+      <div className='AxisSelectors'>
+        <div className='X-selector'><ScaleSelector axis="X" onScaleChange={handleScaleChange} /> <VariableAxisSelector axis="X" currentRuns={mockData} onAxisVarChange={handleVariableForAxisChange}/></div>
+        <div className='Y-selector'><ScaleSelector axis="Y" onScaleChange={handleScaleChange} /> <VariableAxisSelector axis="Y" currentRuns={mockData} onAxisVarChange={handleVariableForAxisChange}/></div>
       </div>
-
-      <header className="App-header">
-      <p>
-          Current Selected Run Info
-        </p>
-        {((selectedRuns.Runs.length > 0) && (variableForAxis.X !== '' && variableForAxis.Y !== '')) ? (
-          <RunDetailsChart xScale={scales.X} yScale={scales.Y} inputData={chartData} xKey = {variableForAxis.X}yKey = {variableForAxis.Y}/>
+      </div>
+      <header className="graph-window">
+        {((chartData.Runs.length > 0) && (variableForAxis.X !== '' && variableForAxis.Y !== '')) ? (
+            <RunDetailsChart xScale={scales.X} yScale={scales.Y} inputData={chartData} xKey = {variableForAxis.X}yKey = {variableForAxis.Y}/>
         ) : (
           <p>No selected data</p>
         )}
+
       </header>
     </div>
   );
