@@ -16,6 +16,7 @@ function RunWindow() {
   const transformData = (totalSelectedRuns, X, Y) => {
     return {
       Runs: totalSelectedRuns.Runs.map(run => ({
+        name: run.name,
         [X]: run[X],
         [Y]: run[Y]
       }))

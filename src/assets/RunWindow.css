@@ -23,19 +23,18 @@
 }
 
 .graph-window {
-    flex-grow: 1; /* Allow this container to take up any remaining space */
-    align-items: center;
-    overflow: auto;
-    border-left: 1px solid #000; /* Thick right border as the line */
     display: flex;
-    flex-wrap: wrap; /* Allow items to wrap */
-    align-items: flex-start; /* Align items at the start of the container */
-    gap: 10px; /* Space between graphs */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 100vh)); /* Responsive grid columns */
+    grid-gap: 10px; /* Space between charts */
+    overflow-y: auto; /* Allow vertical scrolling */
+    padding: 10px;
+    flex-grow: 1; /* Take up remaining space */
 }
 
 .graph-Container {
-    flex: 1 1 300px; /* Allow flex items to grow and shrink from a base width of 300px */
-    padding: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .Run-Box {
