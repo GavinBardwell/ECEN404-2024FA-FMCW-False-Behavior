@@ -37,7 +37,6 @@ const RunDetailsChart = ({ xScale = 'linear', yScale = 'linear', inputData }) =>
   }, [inputData]);
 
   useEffect(() => {
-    console.log(data)
   }, [data])
 
   return (

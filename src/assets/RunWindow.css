@@ -9,9 +9,12 @@
 
 .DifferentSelections {
     padding: 10px;
+    
 }
 
 .AxisSelectors {
+    display: grid;
+    grid-template-columns: 1fr 3fr; /* Improved column sizing */
     border-style: solid;
     border-radius: 1px;
     border-width: 1px;
@@ -20,8 +23,19 @@
 }
 
 .graph-window {
+    flex-grow: 1; /* Allow this container to take up any remaining space */
     align-items: center;
+    overflow: auto;
     border-left: 1px solid #000; /* Thick right border as the line */
+    display: flex;
+    flex-wrap: wrap; /* Allow items to wrap */
+    align-items: flex-start; /* Align items at the start of the container */
+    gap: 10px; /* Space between graphs */
+}
+
+.graph-Container {
+    flex: 1 1 300px; /* Allow flex items to grow and shrink from a base width of 300px */
+    padding: 10px;
 }
 
 .Run-Box {

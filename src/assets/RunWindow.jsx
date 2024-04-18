@@ -12,7 +12,7 @@ function RunWindow() {
   const [selectedRuns, setSelectedRuns] = useState({Runs: []});
   const [variableForAxis, setVariableForAxis] = useState({ X: '', Y: ''});
   const [chartData, setChartData] = useState({Runs: []})
-  
+  const [graphsToPlot, setGraphsToPlot] = useState([])
   const transformData = (totalSelectedRuns, X, Y) => {
     return {
       Runs: totalSelectedRuns.Runs.map(run => ({
@@ -60,6 +60,20 @@ function RunWindow() {
       }
     });
   };
+
+  const addGraph = () => {
+    setGraphsToPlot(graphs => [
+      ...graphs,
+      {
+        xScale: scales.X,
+        yScale: scales.Y,
+        inputData: chartData,
+        xKey: variableForAxis.X,
+        yKey: variableForAxis.Y
+      }
+    ])
+    console.log(graphsToPlot);
+  }
   useEffect(() => {
     //comand picks only the selected X and Y axis from the selected runs
     if (selectedRuns.Runs.length > 0 && variableForAxis.X && variableForAxis.Y) {
@@ -82,15 +96,21 @@ function RunWindow() {
         <div className='X-selector'><ScaleSelector axis="X" onScaleChange={handleScaleChange} /> <VariableAxisSelector axis="X" currentRuns={mockData} onAxisVarChange={handleVariableForAxisChange}/></div>
         <div className='Y-selector'><ScaleSelector axis="Y" onScaleChange={handleScaleChange} /> <VariableAxisSelector axis="Y" currentRuns={mockData} onAxisVarChange={handleVariableForAxisChange}/></div>
       </div>
+      <div className="Add graph"> {((chartData.Runs.length > 0) && (variableForAxis.X !== '' && variableForAxis.Y !== '')) ? 
+      (        <button onClick={addGraph}>add graph</button>
+      ) : (
+        <p>select required data</p>
+      )
+      }
       </div>
-      <header className="graph-window">
-        {((chartData.Runs.length > 0) && (variableForAxis.X !== '' && variableForAxis.Y !== '')) ? (
-            <RunDetailsChart xScale={scales.X} yScale={scales.Y} inputData={chartData} xKey = {variableForAxis.X}yKey = {variableForAxis.Y}/>
-        ) : (
-          <p>No selected data</p>
-        )}
+      </div>
+      <div className="graph-window">
+      {graphsToPlot.map((graph, index) => (
+          <RunDetailsChart key={index} xScale={graph.xScale} yScale={graph.yScale} inputData={graph.inputData} xKey={graph.xKey} yKey={graph.yKey} />
+        ))}
+      {graphsToPlot.length === 0 && <p className='graph-Container'>No graphs to display. Select data and add a graph.</p>}
 
-      </header>
+      </div>
     </div>
   );
 }
