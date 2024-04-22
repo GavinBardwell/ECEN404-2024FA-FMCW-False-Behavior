@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import ScaleSelector from './ScaleSelector';
 import RunDetailsChart from './RunVisualization'; // Adjust the import path if necessary
-import mockData from './RunDetails.json';
 import RunsTable from './RunTable';
+import ActiveRunTable from './ActiveRunTable';
 import VariableAxisSelector from './VariableAxisSelector';
 import './RunWindow.css'
-
+import { Upload } from './Upload';
 
 function RunWindow() {
+  const [mockData, setMockData] = useState([])
   const [scales, setScales] = useState({ X: 'linear', Y: 'linear'});
   const [selectedRuns, setSelectedRuns] = useState({Runs: []});
   const [variableForAxis, setVariableForAxis] = useState({ X: '', Y: ''});
@@ -22,7 +23,14 @@ function RunWindow() {
       }))
     }
   }
-
+  const handleFileUpload = jsonData => {
+    try {
+      const data = JSON.parse(jsonData);
+      setMockData(data);  // Assuming the JSON data is in the correct format
+    } catch (error) {
+      alert('Failed to parse JSON data');
+    }
+  };
   const handleScaleChange = (axis, selectedScale) => {
     // Update the scales state with new values for either x or y
   setScales(prevScales => ({
@@ -73,7 +81,6 @@ function RunWindow() {
         yKey: variableForAxis.Y
       }
     ])
-    console.log(graphsToPlot);
   }
   useEffect(() => {
     //comand picks only the selected X and Y axis from the selected runs
@@ -84,14 +91,25 @@ function RunWindow() {
   }, [selectedRuns, variableForAxis]);
 
   useEffect(() => {
-  }, [chartData])
+    //console.log(graphsToPlot);
+    //console.log(mockData);
+  }, [chartData, graphsToPlot])
+
+  //takes in the index of the run to remove and then sets the graph to not include that
+  const removeGraph = (indexToRemove) => {
+    setGraphsToPlot(graphs => graphs.filter((_, index) => index !== indexToRemove));
+  };
 
   return (
     
     <div className="run-container">
+      {(mockData.length === 0) ? (<Upload onFileUpload={handleFileUpload} />) : (
       <div className = "DifferentSelections">
       <div className="Run-Box">
         <RunsTable inputRuns={mockData} selectedRuns={selectedRuns.Runs} onRunSelectionChange={handleRunSelectionChange}/>
+      </div>
+      <div className="active-Run-Box">
+        {graphsToPlot.length !== 0 && <ActiveRunTable inputRuns={graphsToPlot} onRunRemoval={removeGraph}/>}
       </div>
       <div className='AxisSelectors'>
         <div className='X-selector'><ScaleSelector axis="X" onScaleChange={handleScaleChange} /> <VariableAxisSelector axis="X" currentRuns={mockData} onAxisVarChange={handleVariableForAxisChange}/></div>
@@ -105,6 +123,7 @@ function RunWindow() {
       }
       </div>
       </div>
+      )}
       <div className="graph-window">
       {graphsToPlot.map((graph, index) => (
           <RunDetailsChart key={index} xScale={graph.xScale} yScale={graph.yScale} inputData={graph.inputData} xKey={graph.xKey} yKey={graph.yKey} />

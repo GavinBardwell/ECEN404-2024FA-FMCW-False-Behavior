@@ -38,12 +38,15 @@ const RunDetailsChart = ({ xScale = 'linear', yScale = 'linear', inputData }) =>
   }, [inputData]);
 
   useEffect(() => {
-    console.log(data)
+    //console.log(data)
   }, [data])
 
   return (
     <ResponsiveContainer width="100%" height="100%">
    <LineChart data={data}>
+        <text x={500 / 2} y={20} fill="black" textAnchor="middle" dominantBaseline="central">
+            <tspan fontSize="14">{xKey} vs {yKey}</tspan>
+        </text>
       <CartesianGrid strokeDasharray="3 3" />
       <XAxis dataKey={xKey} scale={scaleType(xScale)} domain={['dataMin', 'dataMax']} />
       <YAxis dataKey={yKey} scale={scaleType(yScale)} label={{ value: [yKey], angle: -90, position: 'insideLeft'}} domain={['dataMin', 'dataMax']} />

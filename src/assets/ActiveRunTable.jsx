@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import "./RunTable.css"
-const RunsTable = ({ inputRuns, selectedRuns, onRunSelectionChange }) => {
+const ActiveRunTable = ({ inputRuns,  onRunRemoval }) => {
   const [runData, setRunData] = useState([])
   useEffect(() => {
     // Simulating fetching data from an API
-    setRunData(inputRuns.Runs);
+    console.log(inputRuns)
+    setRunData(inputRuns);
   }, [inputRuns]);
 
   // Assuming you'll use the selectedRuns for data visualization elsewhere
@@ -14,26 +15,20 @@ const RunsTable = ({ inputRuns, selectedRuns, onRunSelectionChange }) => {
     <table className='Run-Table'>
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Date</th>
-          <th>Include</th>
+          <th>Runs</th>
+          <th>X axis</th>
+          <th>Y Axis</th>
+          <th>Remove</th>
         </tr>
       </thead>
       <tbody>
-        {runData.map((run) => (
-          <tr key={run.id}>
-
-            <td>{run.id}</td>
-            <td>{run.name}</td>
-            <td>{run.Date}</td>
+        {runData.map((graph, index) => (
+          <tr key={`${graph.id}`}>
+            <td>{graph.inputData.Runs.map(detail => detail.name).join(', ')}</td>
+            <td>{graph.xKey}</td>
+            <td>{graph.yKey}</td>
             <td>
-              <input
-                type="checkbox"
-                checked={selectedRuns.some(r => r.id === run.id)}
-                onChange={() => {onRunSelectionChange(run)
-              }}
-              />
+            <button onClick={() => onRunRemoval(index)}>X</button>
             </td>
           </tr>
         ))}
@@ -42,4 +37,4 @@ const RunsTable = ({ inputRuns, selectedRuns, onRunSelectionChange }) => {
   );
 };
 
-export default RunsTable;
+export default ActiveRunTable;
