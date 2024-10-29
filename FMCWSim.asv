@@ -1,0 +1,187 @@
+classdef FMCWS< handle
+    properties
+        config
+        c = 3e8;
+        fc
+        lambda
+        range_max
+        t_max
+        range_res
+        bandwidth
+        sweep_slope
+        v_max
+        fd_max
+        fr_max
+        fb_max
+        fs
+        ant_aperture
+        ant_gain
+        tx_ppower
+        tx_gain
+        rx_gain
+        rx_nf
+        tx_waveform
+        radar_speed = 0;
+        radarmotion
+        specanalyzer
+        N_benign
+        benign_objects
+        N_emission
+        emission_objects
+    end
+    
+    methods
+        function obj = FMCWRadarSimulation()
+        end
+        
+        function loadConfig(obj, config_file)
+            if nargin < 2
+                config_file = 'radar_config.mat';
+            end
+            
+            % Load Config File
+            run("radarConfigGenerator.m");
+            temp_config = load(config_file);
+            obj.config = temp_config;
+            
+            % Primary Radar Configuration
+            obj.fc = obj.config.primary.fc;
+            obj.lambda = obj.c / obj.fc;
+            
+            obj.range_max = obj.config.primary.range_max;
+            obj.t_max = 5.5 * obj.range2time(obj.range_max);
+            
+            obj.range_res = obj.config.primary.range_res;
+            obj.bandwidth = obj.rangeres2bw(obj.range_res);
+            obj.sweep_slope = obj.bandwidth / obj.t_max;
+            
+            obj.v_max = obj.config.primary.v_max;
+            obj.fd_max = obj.speed2dop(2 * obj.v_max);
+            obj.fr_max = obj.range2beat(obj.range_max);
+            obj.fb_max = obj.fr_max + obj.fd_max;
+            
+            obj.fs = max(2 * obj.fb_max, obj.bandwidth);
+            
+            % Antenna Parameters
+            obj.ant_aperture = obj.config.primary.ant_aperture;
+            obj.ant_gain = obj.aperture2gain(obj.ant_aperture);
+            
+            % Transmitter and Receiver Parameters
+            obj.tx_ppower = obj.db2pow(obj.config.primary.tx_power) * 1e-3;  % in watts
+            obj.tx_gain = obj.config.primary.tx_gain + obj.ant_gain;
+            obj.rx_gain = obj.config.primary.rx_gain + obj.ant_gain;
+            obj.rx_nf = obj.config.primary.rx_nf;  % in dB
+            
+            % Create Primary Radar Waveform
+            obj.tx_waveform = phased.FMCWWaveform('SweepTime', obj.t_max, 'SweepBandwidth', obj.bandwidth, 'SampleRate', obj.fs);
+            
+            % Create Primary Radar Motion
+            obj.radarmotion = phased.Platform('InitialPosition', [0; 0; 0], 'Velocity', [obj.radar_speed; 0; 0]);
+            
+            % Spectrum Analyzer for Visualization
+            obj.specanalyzer = spectrumAnalyzer('SampleRate', obj.fs, 'Method', 'welch', 'AveragingMethod', 'running', 'PlotAsTwoSidedSpectrum', true, 'FrequencyResolutionMethod', 'rbw', 'Title', 'Spectrum for received and dechirped signal', 'ShowLegend', true);
+        end
+        
+        function xr = simulateEnvironment(obj, Nsweep)
+            if nargin < 2
+                Nsweep = 64;
+            end
+            
+            rng(2012);
+            waveform_samples = round(obj.tx_waveform.SampleRate * obj.tx_waveform.SweepTime);
+            xr = complex(zeros(waveform_samples, Nsweep));
+            
+            for m = 1:Nsweep
+                % Update Radar Position
+                [radar_pos, radar_vel] = obj.radarmotion(obj.t_max);
+                
+                % Update Benign Object Positions
+                for i = 1:obj.N_benign
+                    [obj.benign_objects{i}.pos, obj.benign_objects{i}.vel] = obj.benign_objects{i}.motion(obj.t_max);
+                end
+                
+                % Radar Transmission
+                sig = obj.tx_waveform();
+                txsig = obj.transmitter(sig);
+                
+                % Signal Propagation and Reflection
+                total_received_sig = complex(zeros(size(txsig)));
+                for i = 1:obj.N_benign
+                    reflected_sig = obj.channel(txsig, radar_pos, obj.benign_objects{i}.pos, radar_vel, obj.benign_objects{i}.vel);
+                    reflected_sig = obj.benign_objects{i}.target(reflected_sig);
+                    total_received_sig = total_received_sig + reflected_sig;
+                end
+                
+                % Emission Radar Interference
+                for i = 1:obj.N_emission
+                    [emission_pos, emission_vel] = obj.emission_objects{i}.motion(obj.t_max);
+                    jammer_sig = obj.emission_objects{i}.waveform();
+                    jammer_txsig = obj.emission_objects{i}.transmitter(jammer_sig);
+                    jammer_received_sig = obj.channel(jammer_txsig, emission_pos, radar_pos, emission_vel, radar_vel);
+                    total_received_sig = total_received_sig + jammer_received_sig;
+                end
+                
+                % Dechirp the Received Signal
+                dechirpsig = dechirp(total_received_sig, sig);
+                
+                % Visualization
+                obj.specanalyzer([total_received_sig, dechirpsig]);
+                
+                % Store Dechirped Signal
+                xr(:, m) = dechirpsig;
+            end
+        end
+        
+        function plotRangeDopplerResponse(obj, xr)
+            rngdopresp = phased.RangeDopplerResponse('PropagationSpeed', obj.c, 'DopplerOutput', 'Speed', 'OperatingFrequency', obj.fc, 'SampleRate', obj.fs, 'RangeMethod', 'FFT', 'SweepSlope', obj.sweep_slope, 'RangeFFTLengthSource', 'Property', 'RangeFFTLength', 2048, 'DopplerFFTLengthSource', 'Property', 'DopplerFFTLength', 256);
+            
+            figure;
+            plotResponse(rngdopresp, xr);
+            title('Range-Doppler Response');
+            xlabel('Doppler (m/s)');
+            ylabel('Range (m)');
+            axis([-obj.v_max, obj.v_max, 0, obj.range_max]);
+        end
+        
+        function plotSignalSpectrum(obj, signal)
+            figure;
+            spectrogram(signal, 32, 16, 32, obj.fs, 'yaxis');
+            title('Signal Spectrum');
+        end
+        
+        function plotWaveform(obj, signal)
+            figure;
+            t = (0:1/obj.fs:obj.t_max-1/obj.fs);
+            plot(t, real(signal));
+            title('FMCW Signal Waveform');
+            xlabel('Time (s)');
+            ylabel('Amplitude (v)');
+            axis tight;
+        end
+        
+        % Helper functions
+        function t = range2time(obj, range_max)
+            t = (2 * range_max) / obj.c;
+        end
+        
+        function bw = rangeres2bw(obj, range_res)
+            bw = obj.c / (2 * range_res);
+        end
+        
+        function dop = speed2dop(obj, speed)
+            dop = (2 * speed * obj.fc) / obj.c;
+        end
+        
+        function beat = range2beat(obj, range_max)
+            beat = obj.sweep_slope * obj.range2time(range_max);
+        end
+        
+        function gain = aperture2gain(obj, aperture)
+            gain = 10 * log10(4 * pi * aperture / (obj.lambda ^ 2));
+        end
+        
+        function pow = db2pow(obj, db_value)
+            pow = 10 ^ (db_value / 10);
+        end
+    end
+end

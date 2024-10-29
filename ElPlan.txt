@@ -1,0 +1,14 @@
+Plan for FMCW sim
+
+1) waveform generation
+	a) victim waveform function
+	b) attacker waveform function
+2) show results
+	a) show distance measurements
+	b) make a good gui interface
+3) allow for editing
+	a) currently allow for one axis(distance)
+		b) stretch goal would be to add both benign and hostile objects(would mean adding second or third axis)
+
+	
+
