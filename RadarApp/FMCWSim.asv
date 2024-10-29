@@ -1,4 +1,4 @@
-classdef FMCWS< handle
+classdef FMCWS
     properties
         config
         c = 3e8;
