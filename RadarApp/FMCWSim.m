@@ -177,16 +177,26 @@ classdef FMCWSim
             end
         end
         
-        function plotRangeDopplerResponse(obj, xr)
-            rngdopresp = phased.RangeDopplerResponse('PropagationSpeed', obj.c, 'DopplerOutput', 'Speed', 'OperatingFrequency', obj.fc, 'SampleRate', obj.fs, 'RangeMethod', 'FFT', 'SweepSlope', obj.sweep_slope, 'RangeFFTLengthSource', 'Property', 'RangeFFTLength', 2048, 'DopplerFFTLengthSource', 'Property', 'DopplerFFTLength', 256);
-            
-            figure;
-            plotResponse(rngdopresp, xr);
-            title('Range-Doppler Response');
-            xlabel('Doppler (m/s)');
-            ylabel('Range (m)');
-            axis([-obj.v_max, obj.v_max, 0, obj.range_max]);
+        function plotRangeDopplerResponse(obj, xr, targetGraph)
+            % Create a phased.RangeDopplerResponse object with given parameters
+            rngdopresp = phased.RangeDopplerResponse('PropagationSpeed', obj.c, 'DopplerOutput', ...
+                'Speed', 'OperatingFrequency', obj.fc, 'SampleRate', obj.fs, 'RangeMethod', 'FFT', ...
+                'SweepSlope', obj.sweep_slope, 'RangeFFTLengthSource', 'Property', 'RangeFFTLength', 2048, ...
+                'DopplerFFTLengthSource', 'Property', 'DopplerFFTLength', 256);
+        
+            % Calculate the response data using the object and signal xr
+            [data, rng_grid, dop_grid] = rngdopresp(xr);
+        
+            % Plot the response on the provided UIAxis (targetGraph)
+            surf(targetGraph, dop_grid, rng_grid, mag2db(abs(data)), 'EdgeColor', 'none');
+            view(targetGraph, 0, 90); % Set the view to a 2D view
+            xlabel(targetGraph, 'Doppler (m/s)');
+            ylabel(targetGraph, 'Range (m)');
+            title(targetGraph, 'Range-Doppler Response');
+            axis(targetGraph, [-obj.v_max, obj.v_max, 0, obj.range_max]);
+            colorbar(targetGraph);
         end
+
         
         function plotWaveform(obj, signal)
             figure;
@@ -202,6 +212,16 @@ classdef FMCWSim
             figure;
             spectrogram(signal, 32, 16, 32, obj.fs, 'yaxis');
             title('Signal Spectrum');
+        end
+
+        function plotRangePower(obj, xr, uiax)
+            range_power = sum(abs(xr), 2);
+            range_axis = linspace(0, obj.range_max, length(range_power));
+            plot(uiax, range_axis, 10*log10(range_power));
+            xlabel(uiax, 'Range (m)');
+            ylabel(uiax, 'Power (dB)');
+            title(uiax, 'Range vs Power');
+            grid(uiax, 'on');
         end
     end
 end

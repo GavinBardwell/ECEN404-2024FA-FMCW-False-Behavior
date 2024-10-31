@@ -12,10 +12,12 @@ Nsweep = 64;
 xr = radarSim.simulateEnvironment(Nsweep);
 
 % Plot the waveform
-radarSim.plotWaveform(radarSim.tx_waveform());
+%radarSim.plotWaveform(radarSim.tx_waveform());
 
 % Plot the signal spectrum
-radarSim.plotSignalSpectrum(radarSim.tx_waveform());
+%radarSim.plotSignalSpectrum(radarSim.tx_waveform());
 
 % Plot the range-Doppler response
-radarSim.plotRangeDopplerResponse(xr);
+%radarSim.plotRangeDopplerResponse(xr);
+
+radarSim.plotRangePower(xr);
