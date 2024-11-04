@@ -1,7 +1,10 @@
 classdef FMCWSim
     properties
+        %config fle
         config
+        %constants
         c = 3e8;
+        %radar info
         fc
         lambda
         range_max
@@ -26,8 +29,14 @@ classdef FMCWSim
         radar_velocity
         transmitter
         receiver
+        %environment
+            %radar emission objects
         N_emission
         emission_objects
+            %regular objects
+        N_benign
+        benign_objects
+        %analysis tools
         specanalyzer
     end
     
@@ -109,6 +118,18 @@ classdef FMCWSim
                 obj.emission_objects(i).tx_gain = emission_object.tx_gain;
                 obj.emission_objects(i).position = emission_object.position;
                 obj.emission_objects(i).velocity = emission_object.velocity;
+            end
+
+            obj.N_benign = length(obj.config.benign_objects);
+            obj.benign_objects = struct([]);
+            for i = 1:obj.N_benign
+                obj.benign_objects(i).position = obj.config.benign_objects(i).position;
+                obj.benign_objects(i).velocity = obj.config.benign_objects(i).velocity;
+                obj.benign_objects(i).distance = norm(obj.benign_objects(i).position);
+                obj.benign_objects(i).rcs = db2pow(10*log10(obj.benign_objects(i).distance) + obj.config.benign_objects(i).rcs_offset);
+                obj.benign_objects(i).target = phased.RadarTarget('MeanRCS', obj.benign_objects(i).rcs, 'PropagationSpeed', obj.c, 'OperatingFrequency', obj.fc);
+                obj.benign_objects(i).motion = phased.Platform('InitialPosition', obj.benign_objects(i).position, 'Velocity', obj.benign_objects(i).velocity);
+            
             end
         end
         

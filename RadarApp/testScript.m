@@ -18,6 +18,6 @@ xr = radarSim.simulateEnvironment(Nsweep);
 %radarSim.plotSignalSpectrum(radarSim.tx_waveform());
 
 % Plot the range-Doppler response
-%radarSim.plotRangeDopplerResponse(xr);
+radarSim.plotRangeDopplerResponse(xr);
 
-radarSim.plotRangePower(xr);
+%radarSim.plotRangePower(xr);
