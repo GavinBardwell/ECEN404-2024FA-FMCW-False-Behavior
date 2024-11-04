@@ -28,6 +28,9 @@ benign_objects = [];
 benign_objects(1).position = [10; 0; 0];    % Initial position in meters
 benign_objects(1).velocity = [1; 0; 0];     % Initial velocity in m/s
 benign_objects(1).rcs_offset = 2;                 % Radar cross-section in dBsm
+benign_objects(2).position = [20; 0; 0];    % Initial position in meters
+benign_objects(2).velocity = [1; 0; 0];     % Initial velocity in m/s
+benign_objects(2).rcs_offset = 2;                 % Radar cross-section in dBsm
 
 % Save to .mat file
 save('radar_config.mat', 'primary', 'emission_objects', 'benign_objects');

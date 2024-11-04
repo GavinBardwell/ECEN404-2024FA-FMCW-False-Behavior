@@ -5,30 +5,9 @@ classdef FMCWSim
         %constants
         c = 3e8;
         %radar info
-        fc
-        lambda
-        range_max
-        t_max
-        range_res
-        bandwidth
-        sweep_slope
-        v_max
-        fd_max
-        fr_max
-        fb_max
-        fs
-        ant_aperture
-        ant_gain
-        tx_ppower
-        tx_gain
-        rx_gain
-        rx_nf
-        tx_waveform
-        radar_speed = 0;
-        radar_position
-        radar_velocity
-        transmitter
-        receiver
+        radar%primaryRadar
+        %environment
+        environment
         %environment
             %radar emission objects
         N_emission
