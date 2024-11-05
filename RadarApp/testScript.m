@@ -9,7 +9,7 @@ radarSim.loadConfig('radar_config.mat');
 
 % Simulate the environment
 Nsweep = 64;
-xr = radarSim.simulateEnvironment(Nsweep);
+xr = radarSim.simulate(Nsweep);
 
 % Plot the waveform
 %radarSim.plotWaveform(radarSim.tx_waveform());
@@ -18,6 +18,10 @@ xr = radarSim.simulateEnvironment(Nsweep);
 %radarSim.plotSignalSpectrum(radarSim.tx_waveform());
 
 % Plot the range-Doppler response
-radarSim.plotRangeDopplerResponse(xr);
+radarSim.plotRangeDoppler(xr);
 
-%radarSim.plotRangePower(xr);
+radarSim.plotRangeVsPower(xr);
+
+radarSim.plotVelocityVsPower(xr);
+
+radarSim.openSpectrumAnalyzer();

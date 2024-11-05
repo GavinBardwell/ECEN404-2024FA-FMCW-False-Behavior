@@ -32,6 +32,11 @@ classdef Environment
                 benign_objects(i) = BenignObject(params);
             end
         end
+        function setTargets(obj, operatingFrequency)
+            for i = 1:length(obj.benign_objects)
+               obj.benign_objects(i).calculateTarget(operatingFrequency);
+            end
+        end
 
         function emission_objects = setEmissions(~, emission_data)
             % Create an array of EmissionObject instances from the emission data
@@ -48,7 +53,7 @@ classdef Environment
                 emission_objects(i) = EmissionObject(params);
             end
         end
-
+        
         function returnedEnvironment = saveEnvironment(obj)
             % returns the necessary environment values to be saved
             returnedEnvironment.benign_objects = obj.benign_objects;

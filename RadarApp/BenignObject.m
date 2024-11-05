@@ -1,19 +1,24 @@
-classdef BenignObject
+classdef BenignObject < handle
     %Contains all information of a benign object in our environment    
-    properties
+    properties (Access = private, Constant)
+        c= 3e8
+    end
+    properties (Dependent)
+        motion
+    end
+     properties
         position
         velocity
         rcs
+        target
     end
     
     methods
         function obj = BenignObject(params)
                 %constructor
-                if(nargin == 3)
-                    obj.position = params.position;
-                    obj.velocity = params.velocity;
-                    obj.rcs = params.rcs;
-                end
+                obj.position = params.position;
+                obj.velocity = params.velocity;
+                obj.rcs = params.rcs;
         end
         
         function obj = setPosition(position)
@@ -22,6 +27,12 @@ classdef BenignObject
         
         function obj = setVelocity(velocity)
             obj.velocity = velocity;
+        end
+        function calculateTarget(obj, operatingFreq)
+            obj.target = phased.RadarTarget('MeanRCS', obj.rcs, 'PropagationSpeed', obj.c, 'OperatingFrequency', operatingFreq);
+        end
+        function value = get.motion(obj)
+            value = phased.Platform('InitialPosition', obj.position, 'Velocity', obj.velocity);
         end
     end
 end
