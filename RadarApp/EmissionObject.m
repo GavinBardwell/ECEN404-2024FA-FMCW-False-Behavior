@@ -13,11 +13,11 @@ classdef EmissionObject < handle
         velocity % Initial velocity in m/s (x, y, z)
     end
     
-    properties (Constant)
+    properties (Constant, Hidden=true)
         c = 3e8; % Speed of light in m/s
     end
     
-    properties (Dependent)
+    properties (Dependent, Hidden=true)
         waveform
         t_max
         bandwidth
@@ -134,6 +134,17 @@ classdef EmissionObject < handle
         function beat = range2beat(obj, range_max)
             % Calculate beat frequency for given range
             beat = obj.sweep_slope * obj.range2time(range_max);
+        end
+        function returnedObject = saveObject(obj)
+            returnedObject = struct;
+            returnedObject.position = obj.position;
+            returnedObject.velocity = obj.velocity;
+            returnedObject.fc = obj.fc;
+            returnedObject.range_max = obj.range_max;
+            returnedObject.range_res = obj.range_res;
+            returnedObject.v_max = obj.v_max;
+            returnedObject.tx_power = obj.tx_power;
+            returnedObject.tx_gain = obj.tx_gain;
         end
     end
 end

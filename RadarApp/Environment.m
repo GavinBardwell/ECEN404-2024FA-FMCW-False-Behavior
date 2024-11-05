@@ -54,11 +54,35 @@ classdef Environment
             end
         end
         
-        function returnedEnvironment = saveEnvironment(obj)
-            % returns the necessary environment values to be saved
-            returnedEnvironment.benign_objects = obj.benign_objects;
-            returnedEnvironment.emission_objects = obj.emission_objects;
+        
+function returnedEnvironment = saveEnvironment(obj)
+    % Save the environment data into a struct
+    returnedEnvironment = struct();
+    
+    % Initialize benign_objects struct array
+    if ~isempty(obj.benign_objects)
+        benign_structs = repmat(obj.benign_objects(1).saveObject(), 1, length(obj.benign_objects));
+        for i = 1:length(obj.benign_objects)
+            benign_structs(i) = obj.benign_objects(i).saveObject();
         end
+    else
+        benign_structs = struct([]);
+    end
+    returnedEnvironment.benign_objects = benign_structs;
+    
+    % Initialize emission_objects struct array
+    if ~isempty(obj.emission_objects)
+        emission_structs = repmat(obj.emission_objects(1).saveObject(), 1, length(obj.emission_objects));
+        for i = 1:length(obj.emission_objects)
+            emission_structs(i) = obj.emission_objects(i).saveObject();
+        end
+    else
+        emission_structs = struct([]);
+    end
+    returnedEnvironment.emission_objects = emission_structs;
+end
+
+
 
         % Uncomment and complete the methods below if needed
         % function obj = setFloor(obj, height)

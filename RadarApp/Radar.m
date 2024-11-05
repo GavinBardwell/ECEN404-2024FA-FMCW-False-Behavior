@@ -2,9 +2,11 @@ classdef Radar
     %This class holds and calculates all information needed for the primary
     %radar
 
-    properties
+    properties (SetAccess = private)
         %constants
         c = 3e8;
+    end
+    properties (SetAccess = public)
         %values
         fc;
         range_max;
@@ -15,15 +17,12 @@ classdef Radar
         tx_gain;
         rx_gain;
         rx_nf;
-        tx_waveform;
         radar_speed = 0;
         radar_position;
-        radar_velocity;
-        transmitter;
-        receiver;
     end
 
-    properties (Dependent)
+    properties (Dependent, SetAccess = private)
+        radar_velocity;
         lambda;
         t_max;
         bandwidth;
@@ -33,6 +32,9 @@ classdef Radar
         fb_max;
         fs;
         ant_gain;
+        tx_waveform;
+        transmitter;
+        receiver;
     end
 
     methods
@@ -62,17 +64,29 @@ classdef Radar
             obj.range_res = params.range_res;
             obj.v_max = params.v_max;
             obj.ant_aperture = params.ant_aperture;
-            obj.tx_ppower = obj.db2pow(params.tx_power) * 1e-3;  % in watts
+            if isa(params, 'Radar')%done this way because set goes off of ppeak power
+                obj.tx_ppower = params.tx_ppower;
+            else
+                obj.tx_ppower = obj.db2pow(params.tx_power) * 1e-3;  % in watts
+            end
             obj.tx_gain = params.tx_gain;
             obj.rx_gain = params.rx_gain;
             obj.rx_nf = params.rx_nf;  % in dB
-            obj.tx_waveform = phased.FMCWWaveform('SweepTime', obj.t_max, 'SweepBandwidth', obj.bandwidth, 'SampleRate', obj.fs);
             obj.radar_position = [0; 0; 0];
-            obj.radar_velocity = [obj.radar_speed; 0; 0];
-            obj.transmitter = phased.Transmitter('PeakPower', obj.tx_ppower, 'Gain', obj.tx_gain + obj.ant_gain);
-            obj.receiver = phased.ReceiverPreamp('Gain', obj.rx_gain + obj.ant_gain, 'NoiseFigure', obj.rx_nf, 'SampleRate', obj.fs);
-        end
 
+        end
+        function value = get.radar_velocity(obj)
+            value = [obj.radar_speed; 0; 0];
+        end
+        function value = get.receiver(obj)
+            value = phased.ReceiverPreamp('Gain', obj.rx_gain + obj.ant_gain, 'NoiseFigure', obj.rx_nf, 'SampleRate', obj.fs);
+        end
+        function value = get.transmitter(obj)
+            value = phased.Transmitter('PeakPower', obj.tx_ppower, 'Gain', obj.tx_gain + obj.ant_gain);
+        end
+        function value = get.tx_waveform(obj)
+            value = phased.FMCWWaveform('SweepTime', obj.t_max, 'SweepBandwidth', obj.bandwidth, 'SampleRate', obj.fs);
+        end
         function value = get.lambda(obj)
             value = obj.c / obj.fc;
         end

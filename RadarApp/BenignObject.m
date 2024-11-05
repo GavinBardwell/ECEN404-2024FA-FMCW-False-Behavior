@@ -1,15 +1,17 @@
 classdef BenignObject < handle
     %Contains all information of a benign object in our environment    
-    properties (Access = private, Constant)
+    properties (Access = private, Constant, Hidden =true)
         c= 3e8
     end
-    properties (Dependent)
+    properties (Dependent, Hidden = true)
         motion
     end
      properties
         position
         velocity
         rcs
+     end
+     properties (Hidden = true)
         target
     end
     
@@ -33,6 +35,12 @@ classdef BenignObject < handle
         end
         function value = get.motion(obj)
             value = phased.Platform('InitialPosition', obj.position, 'Velocity', obj.velocity);
+        end
+        function returnedObject = saveObject(obj)
+            returnedObject = struct;
+            returnedObject.position = obj.position;
+            returnedObject.velocity = obj.velocity;
+            returnedObject.rcs = obj.rcs;
         end
     end
 end

@@ -158,43 +158,67 @@ end
             axis tight;
         end
 
-        function plotRangeVsPower(obj, xr)
-            figure;
-            range_power = sum(abs(xr), 2);
-            range_axis = linspace(0, obj.radar.range_max, length(range_power));
-            plot(range_axis, 10*log10(range_power));
-            xlabel('Range (m)');
-            ylabel('Power (dB)');
-            title('Range vs Power');
-            grid on;
-        end
+function plotRangeVsPower(obj, xr, targetAxis)
+    % Calculate the range-power data
+    range_power = sum(abs(xr), 2);
+    range_axis = linspace(0, obj.radar.range_max, length(range_power));
 
-        function plotVelocityVsPower(obj, xr)
-            % Define Doppler FFT parameters
-            dopplerFFTLength = 256;  % Number of points for FFT along Doppler axis
-            fs = obj.radar.fs;       % Sampling frequency of radar
-            
-            % Perform FFT on the radar signal along the Doppler axis
-            dopplerData = fftshift(fft(xr, dopplerFFTLength, 2), 2);
-            
-            % Calculate Doppler frequency axis
-            dopplerAxis = linspace(-fs/2, fs/2, dopplerFFTLength);
-            
-            % Convert Doppler frequency to velocity (using Doppler effect formula)
-            wavelength = obj.radar.c / obj.radar.fc;
-            velocityAxis = dopplerAxis * wavelength / 2;  % m/s
-            
-            % Sum the power across range bins to get overall power at each velocity
-            velocityPower = sum(abs(dopplerData), 1);
-            
-            % Plot Velocity vs Power
-            figure;
-            plot(velocityAxis, 10*log10(velocityPower));
-            xlabel('Velocity (m/s)');
-            ylabel('Power (dB)');
-            title('Velocity vs Power');
-            grid on;
-        end
+    % Plot in the provided UIAxes if available, otherwise create a new figure
+    if nargin > 2 && ~isempty(targetAxis)
+        % Plot in the specified UIAxes
+        plot(targetAxis, range_axis, 10*log10(range_power));
+        xlabel(targetAxis, 'Range (m)');
+        ylabel(targetAxis, 'Power (dB)');
+        title(targetAxis, 'Range vs Power');
+        grid(targetAxis, 'on');
+    else
+        % Plot in a new figure window
+        figure;
+        plot(range_axis, 10*log10(range_power));
+        xlabel('Range (m)');
+        ylabel('Power (dB)');
+        title('Range vs Power');
+        grid on;
+    end
+end
+
+function plotVelocityVsPower(obj, xr, targetAxis)
+    % Define Doppler FFT parameters
+    dopplerFFTLength = 256;  % Number of points for FFT along Doppler axis
+    fs = obj.radar.fs;       % Sampling frequency of radar
+
+    % Perform FFT on the radar signal along the Doppler axis
+    dopplerData = fftshift(fft(xr, dopplerFFTLength, 2), 2);
+
+    % Calculate Doppler frequency axis
+    dopplerAxis = linspace(-fs/2, fs/2, dopplerFFTLength);
+
+    % Convert Doppler frequency to velocity (using Doppler effect formula)
+    wavelength = obj.radar.c / obj.radar.fc;
+    velocityAxis = dopplerAxis * wavelength / 2;  % m/s
+
+    % Sum the power across range bins to get overall power at each velocity
+    velocityPower = sum(abs(dopplerData), 1);
+
+    % Plot in the provided UIAxes if available, otherwise create a new figure
+    if nargin > 2 && ~isempty(targetAxis)
+        % Plot in the specified UIAxes
+        plot(targetAxis, velocityAxis, 10*log10(velocityPower));
+        xlabel(targetAxis, 'Velocity (m/s)');
+        ylabel(targetAxis, 'Power (dB)');
+        title(targetAxis, 'Velocity vs Power');
+        grid(targetAxis, 'on');
+    else
+        % Plot in a new figure window
+        figure;
+        plot(velocityAxis, 10*log10(velocityPower));
+        xlabel('Velocity (m/s)');
+        ylabel('Power (dB)');
+        title('Velocity vs Power');
+        grid on;
+    end
+end
+
 
 
         function saveInfo(obj, filename)
