@@ -3,7 +3,7 @@ classdef Environment
     properties
         benign_objects
         emission_objects
-        floor
+        floor = NaN;
         % noise
     end
     
@@ -20,6 +20,7 @@ classdef Environment
             % loads the environment from the config file
             obj.benign_objects = obj.setBenigns(config.benign_objects);
             obj.emission_objects = obj.setEmissions(config.emission_objects);
+            obj.floor = obj.setFloor(config.floor);
         end
 
         function benign_objects = setBenigns(~, benign_data)
@@ -80,14 +81,15 @@ function returnedEnvironment = saveEnvironment(obj)
         emission_structs = struct([]);
     end
     returnedEnvironment.emission_objects = emission_structs;
+    returnedEnvironment.floor = obj.floor;
 end
 
 
 
     % Uncomment and complete the methods below if needed
-    function obj = setFloor(obj, height)
+    function floor = setFloor(floor, height)
          % Sets the floor of the scenario
-         obj.floor = height;
+         floor = height;
     end
 
         % function obj = setNoise(obj)

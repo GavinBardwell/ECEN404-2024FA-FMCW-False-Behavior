@@ -52,22 +52,22 @@ classdef FMCWSim < handle
         end
 
         function clutter = createGround(obj)
-                    % Define clutter with radar and environment parameters
+            % Define clutter with radar and environment parameters
+            height = abs(obj.radar.radar_position(3) + obj.environment.floor);
             clutter = phased.ConstantGammaClutter( ...
-                'Sensor', obj.radar.reciever, ...
                 'PropagationSpeed', obj.radar.c, ...
                 'OperatingFrequency', obj.radar.fc, ...
                 'SampleRate', obj.radar.fs, ...
-                'PRF', 1 / obj.radar.t_max, ... % Pulse Repetition Frequency
-                'Gamma', 0.3, ... % Terrain reflectivity
-                'ClutterMinRange', 500, ...
-                'ClutterMaxRange', 5000, ...
-                'ClutterAzimuthCenter', 0, ...
-                'ClutterAzimuthSpan', 60, ...
-                'PlatformHeight', obj.radar.radar_position(3) + obj.environment.floor, ...
-                'PlatformSpeed', norm(obj.radar.radar_velocity), ...
-                'PlatformDirection', [90; 0]); % Adjust direction as needed
+                'PRF', 1 / obj.radar.t_max, ...           % Pulse Repetition Frequency
+                'Gamma', 0.1, ...                         % Terrain reflectivity (adjust as needed)
+                'ClutterMinRange', 0, ...                 % Minimum range for clutter
+                'ClutterMaxRange', obj.radar.range_max, ... % Maximum range based on radar range
+                'ClutterAzimuthCenter', 0, ...            % Center azimuth of clutter (degrees)
+                'ClutterAzimuthSpan', 180, ...            % Azimuth span of clutter (degrees)
+                'PlatformHeight', height, ... % Radar height + floor level
+                'PlatformSpeed', norm(obj.radar.radar_velocity)); % Radar platform speed
         end
+
 
         function xr = simulate(obj, Nsweep)
             if nargin < 2
@@ -77,9 +77,12 @@ classdef FMCWSim < handle
             obj.environment.setTargets(obj.radar.fc);
             waveform_samples = round(obj.radar.fs * obj.radar.t_max);
             xr = complex(zeros(waveform_samples, Nsweep));
-            
-                    % Create clutter
-            clutter = obj.createGround();
+
+            if not(isnan(obj.environment.floor))
+                clutter = obj.createGround();
+            else
+                clutter = []; % No clutter if floor is undefined
+            end
             
             benign_channel = phased.FreeSpace('PropagationSpeed', obj.radar.c, ...
                 'OperatingFrequency', obj.radar.fc, 'SampleRate', obj.radar.fs, ...
@@ -121,7 +124,11 @@ classdef FMCWSim < handle
                     emission_received_sig = emission_channel(emission_txsig, emission_pos, radar_pos, emission_vel, radar_vel);
                     obj.total_received_sig = obj.total_received_sig + emission_received_sig;
                 end
-        
+                                % Create clutter
+                if ~isempty(clutter)
+                    clutter_returns = sum(clutter(), 2); % Sum across channels if necessary
+                    obj.total_received_sig = obj.total_received_sig + clutter_returns;
+                end
                 obj.dechirpsig = dechirp(obj.total_received_sig, sig);
                 %obj.specanalyzer([obj.total_received_sig, obj.dechirpsig]);
                 xr(:, m) = obj.dechirpsig;
@@ -242,22 +249,44 @@ function plotVelocityVsPower(obj, xr, targetAxis)
 end
 
 
-
-        function saveInfo(obj, filename)
-            % Save radar and environment info to a file
-            info.radar = obj.radar.saveRadar();
-            info.environment = obj.environment.saveEnvironment();
-            save(filename, '-struct', 'info');
+    function createRangeVsPowerrVideo(obj, xr)
+        [numFrames, numPoints] = size(xr);
+        
+        % Create a figure window
+        figure;
+        
+        % Loop through each frame
+        for k = 1:numFrames
+            % Plot the current waveform
+            plot(xr(k, :));
+            title(['Frame ' num2str(k)]);
+            xlabel('Sample Points');
+            ylabel('Amplitude');
+            ylim([-1 1]); % Adjust based on your data range
+        
+            % Pause to control the frame rate
+            pause(0.1); % Pause for 0.1 seconds (adjust as needed)
+        
+            % Optionally, capture the frame for creating a video or GIF
+             frame = getframe(gcf);
+             writeVideo(videoObject, frame); % If using VideoWriter
         end
-
-        function saveRangeVsPower(obj, filename, data)
-            % Save Range vs Power data to a file
-            save(filename, 'data');
-        end
-
-        function saveVelocityVsPower(obj, filename, data)
-            % Save Velocity vs Power data to a file
-            save(filename, 'data');
-        end
-    end
+            end
+            function saveInfo(obj, filename)
+                    % Save radar and environment info to a file
+                    info.radar = obj.radar.saveRadar();
+                    info.environment = obj.environment.saveEnvironment();
+                    save(filename, '-struct', 'info');
+                end
+        
+                function saveRangeVsPower(obj, filename, data)
+                    % Save Range vs Power data to a file
+                    save(filename, 'data');
+                end
+        
+                function saveVelocityVsPower(obj, filename, data)
+                    % Save Velocity vs Power data to a file
+                    save(filename, 'data');
+                end
+            end
 end

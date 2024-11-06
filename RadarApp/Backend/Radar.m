@@ -75,6 +75,9 @@ classdef Radar
             obj.radar_position = [0; 0; 0];
 
         end
+        function receiver = returnReceiver(obj)
+            receiver = obj.receiver;
+        end
         function value = get.radar_velocity(obj)
             value = [obj.radar_speed; 0; 0];
         end

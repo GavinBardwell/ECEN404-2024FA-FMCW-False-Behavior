@@ -6,11 +6,11 @@ primary.range_res = .25;               % Range resolution in meters
 primary.v_max = 230 * 1000 / 3600;   % Maximum speed in m/s
 
 primary.ant_aperture = 6.06e-4;      % Antenna aperture in square meters
-primary.tx_power = 5;                % Transmit power in dBm
+primary.tx_power = 13.5;                % Transmit power in dBm
 primary.tx_gain = 9;                 % Transmit gain in dB
 
 primary.rx_gain = 15;                % Receive gain in dB
-primary.rx_nf = 4.5;                 % Receiver noise figure in dB
+primary.rx_nf = 12;                 % Receiver noise figure in dB
 emission_objects = [];
 % Emission Radar characteristics
 %{
@@ -27,11 +27,13 @@ emission_objects(1).velocity = [0; 0; 0];   % Initial velocity in m/s
 benign_objects = [];
 % Benign Objects
 benign_objects(1).position = [10; 0; 0];    % Initial position in meters
-benign_objects(1).velocity = [1; 0; 0];     % Initial velocity in m/s
-benign_objects(1).rcs_offset = 2;                 % Radar cross-section in dBsm
-benign_objects(2).position = [20; 0; 0];    % Initial position in meters
-benign_objects(2).velocity = [1; 0; 0];     % Initial velocity in m/s
-benign_objects(2).rcs_offset = 2;                 % Radar cross-section in dBsm
+benign_objects(1).velocity = [0; 0; 0];     % Initial velocity in m/s
+benign_objects(1).rcs_offset = 40;                 % Radar cross-section in dBsm
+%benign_objects(2).position = [20; 0; 0];    % Initial position in meters
+%benign_objects(2).velocity = [1; 0; 0];     % Initial velocity in m/s
+%benign_objects(2).rcs_offset = 40;                 % Radar cross-section in dBsm
+
+floor = 0;
 
 % Save to .mat file
-save('radar_config.mat', 'primary', 'emission_objects', 'benign_objects');
+save('default.mat', 'primary', 'emission_objects', 'benign_objects', 'floor');

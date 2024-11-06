@@ -1,6 +1,8 @@
 
 % Script to Run FMCWRadarSimulation
 clear;
+addpath('Backend');
+addpath('Config_Files');
 % Create an instance of FMCWRadarSimulation
 radarSim = FMCWSim();
 
@@ -18,6 +20,7 @@ xr = radarSim.simulate(Nsweep);
 %radarSim.plotSignalSpectrum(radarSim.tx_waveform());
 
 % Plot the range-Doppler response
+
 radarSim.plotRangeDoppler(xr);
 
 radarSim.plotRangeVsPower(xr);
@@ -25,3 +28,5 @@ radarSim.plotRangeVsPower(xr);
 radarSim.plotVelocityVsPower(xr);
 
 radarSim.openSpectrumAnalyzer();
+
+%radarSim.createRangeVsPowerrVideo(xr);
