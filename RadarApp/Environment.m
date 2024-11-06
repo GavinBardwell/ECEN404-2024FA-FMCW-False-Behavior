@@ -3,7 +3,7 @@ classdef Environment
     properties
         benign_objects
         emission_objects
-        % floor
+        floor
         % noise
     end
     
@@ -84,11 +84,11 @@ end
 
 
 
-        % Uncomment and complete the methods below if needed
-        % function obj = setFloor(obj, height)
-        %     % Sets the floor of the scenario
-        %     obj.floor = height;
-        % end
+    % Uncomment and complete the methods below if needed
+    function obj = setFloor(obj, height)
+         % Sets the floor of the scenario
+         obj.floor = height;
+    end
 
         % function obj = setNoise(obj)
         %     % Sets the surrounding noise vector
