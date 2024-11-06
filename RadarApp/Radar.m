@@ -163,7 +163,10 @@ classdef Radar
             ylabel('Amplitude (v)');
             axis tight;
         end
-
+        function dB = pow2db(obj, power)
+            % Calculate the decibel value
+            dB = 10 * log10(power);
+        end
         function returnedRadar = saveRadar(obj)
             % Save radar object to a file
             returnedRadar = struct;
@@ -172,7 +175,7 @@ classdef Radar
             returnedRadar.range_res = obj.range_res;
             returnedRadar.v_max = obj.v_max;
             returnedRadar.ant_aperture = obj.ant_aperture;
-            returnedRadar.tx_ppower = obj.tx_ppower;
+            returnedRadar.tx_power = obj.pow2db(obj.tx_ppower * 1e3);
             returnedRadar.tx_gain = obj.tx_gain;
             returnedRadar.rx_gain = obj.rx_gain;
             returnedRadar.rx_nf = obj.rx_nf;
