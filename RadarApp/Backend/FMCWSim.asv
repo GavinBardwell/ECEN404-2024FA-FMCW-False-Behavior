@@ -145,20 +145,15 @@ classdef FMCWSim < handle
                 targetGraph = [];
             end
         
-            numRows = size(xr, 1);  % FFT length for range dimension
-            taylorWin = taylorwin(numRows, 5, -35);  % Taylor window parameters (n, sidelobe attenuation)
-            
-            xr_windowed = xr .* taylorWin;
-
             % Create a phased.RangeDopplerResponse object with given parameters
             rngdopresp = phased.RangeDopplerResponse('PropagationSpeed', obj.radar.c, ...
                 'DopplerOutput', 'Speed', 'OperatingFrequency', obj.radar.fc, ...
                 'SampleRate', obj.radar.fs, 'RangeMethod', 'FFT', 'SweepSlope', obj.radar.sweep_slope, ...
                 'RangeFFTLengthSource', 'Property', 'RangeFFTLength', 2048, ...
                 'DopplerFFTLengthSource', 'Property', 'DopplerFFTLength', 256);
-            
-            % Apply the Taylor window to the signal before calculating the response
-            [data, rng_grid, dop_grid]= rngdopresp(xr_windowed);
+        
+            % Calculate the response data using the object and signal xr
+            [data, rng_grid, dop_grid]= rngdopresp(xr);
             obj.fftData.resp = data;
             obj.fftData.rng_grid = rng_grid;
             obj.fftData.dop_grid = dop_grid; 
@@ -199,11 +194,11 @@ classdef FMCWSim < handle
 
 function plotRangeVsPower(obj, targetAxis)
     % Calculate the range-power data
-    power_vs_range = sum(abs(obj.fftData.resp), 2);
+    power_vs_range = sum(abs(obj.fftData.resp, 2);
     power_vs_range_db = 10 * log10(power_vs_range);
 
     % Plot in the provided UIAxes if available, otherwise create a new figure
-    if nargin > 1 && ~isempty(targetAxis)
+    if nargin > 2 && ~isempty(targetAxis)
         % Plot in the specified UIAxes
         plot(targetAxis, obj.fftData.rng_grid, power_vs_range_db);
         xlabel(targetAxis, 'Range (m)');
@@ -221,18 +216,18 @@ function plotRangeVsPower(obj, targetAxis)
     end
 end
 
-function plotVelocityVsPower(obj, targetAxis)
+function plotVelocityVsPower(obj, xr, targetAxis)
     % Define Doppler FFT parameters
 % Integrate power over all range bins
-power_vs_doppler = sum(abs(obj.fftData.resp), 1); % Sum over the range dimension
+power_vs_doppler = sum(abs(OBJ.fftData.resp), 1); % Sum over the range dimension
 
 % Convert power to decibels (optional)
 power_vs_doppler_db = 10 * log10(power_vs_doppler);
 
     % Plot in the provided UIAxes if available, otherwise create a new figure
-    if nargin > 1 && ~isempty(targetAxis)
+    if nargin > 2 && ~isempty(targetAxis)
         % Plot in the specified UIAxes
-        plot(targetAxis, obj.fftData.dop_grid, power_vs_doppler_db);
+        plot(targetAxis, velocityAxis, 10*log10(velocityPower));
         xlabel(targetAxis, 'Velocity (m/s)');
         ylabel(targetAxis, 'Power (dB)');
         title(targetAxis, 'Velocity vs Power');
@@ -240,7 +235,7 @@ power_vs_doppler_db = 10 * log10(power_vs_doppler);
     else
         % Plot in a new figure window
         figure;
-        plot(obj.fftData.dopgrid, power_vs_doppler_db);
+        plot(dopgrid, power_vs_doppler_db);
         xlabel('Velocity (m/s)');
         ylabel('Power (dB)');
         title('Velocity vs Power');
