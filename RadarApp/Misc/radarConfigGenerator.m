@@ -33,7 +33,8 @@ benign_objects(1).rcs_offset = 40;                 % Radar cross-section in dBsm
 %benign_objects(2).velocity = [1; 0; 0];     % Initial velocity in m/s
 %benign_objects(2).rcs_offset = 40;                 % Radar cross-section in dBsm
 
-floor = 0;
+%floor = 0;
+floor = NaN;
 
 % Save to .mat file
 save('default.mat', 'primary', 'emission_objects', 'benign_objects', 'floor');

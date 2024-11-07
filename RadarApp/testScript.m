@@ -2,12 +2,12 @@
 % Script to Run FMCWRadarSimulation
 clear;
 addpath('Backend');
-addpath('Config_Files');
+%addpath('Config_Files');
 % Create an instance of FMCWRadarSimulation
-radarSim = FMCWSim();
+radarSim = FMCWSim('default.mat');
 
 % Load configuration file
-radarSim.loadConfig('radar_config.mat');
+%radarSim.loadConfig('default.mat');
 
 % Simulate the environment
 Nsweep = 64;
@@ -23,10 +23,10 @@ xr = radarSim.simulate(Nsweep);
 
 radarSim.plotRangeDoppler(xr);
 
-radarSim.plotRangeVsPower(xr);
+radarSim.plotRangeVsPower();
 
-radarSim.plotVelocityVsPower(xr);
+radarSim.plotVelocityVsPower();
 
-radarSim.openSpectrumAnalyzer();
+%radarSim.openSpectrumAnalyzer();
 
 %radarSim.createRangeVsPowerrVideo(xr);
