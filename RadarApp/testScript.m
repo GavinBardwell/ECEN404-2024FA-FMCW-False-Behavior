@@ -2,6 +2,7 @@
 % Script to Run FMCWRadarSimulation
 clear;
 addpath('Backend');
+addpath('Config_Files')
 %addpath('Config_Files');
 % Create an instance of FMCWRadarSimulation
 radarSim = FMCWSim('default.mat');
@@ -27,6 +28,6 @@ radarSim.plotRangeVsPower();
 
 radarSim.plotVelocityVsPower();
 
-%radarSim.openSpectrumAnalyzer();
+radarSim.openSpectrumAnalyzer();
 
 %radarSim.createRangeVsPowerrVideo(xr);

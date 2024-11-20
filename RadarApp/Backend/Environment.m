@@ -29,7 +29,7 @@ classdef Environment
             for i = 1:length(benign_data)
                 params.position = benign_data(i).position;
                 params.velocity = benign_data(i).velocity;
-                params.rcs = benign_data(i).rcs_offset;
+                params.rcs = benign_data(i).rcs;
                 benign_objects(i) = BenignObject(params);
             end
         end
