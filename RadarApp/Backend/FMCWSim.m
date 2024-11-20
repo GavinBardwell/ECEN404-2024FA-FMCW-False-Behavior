@@ -94,10 +94,16 @@ classdef FMCWSim < handle
                 'TwoWayPropagation', false);
             
             radar_motion = phased.Platform('InitialPosition', obj.radar.radar_position, 'Velocity', obj.radar.radar_velocity);
+
             benign_motions = cell(1, length(obj.environment.benign_objects));
+            benign_positions = cell(1, length(obj.environment.benign_objects)); % Internal positions
+            benign_velocities = cell(1, length(obj.environment.benign_objects)); % Internal velocities
             for i = 1:length(obj.environment.benign_objects)
                 benign_motions{i} = phased.Platform('InitialPosition', obj.environment.benign_objects(i).position, 'Velocity', obj.environment.benign_objects(i).velocity);
+                benign_positions{i} = obj.environment.benign_objects(i).position; % Initialize with current positions
+                benign_velocities{i} = obj.environment.benign_objects(i).velocity; % Initialize with current velocities
             end
+
             emission_motions = cell(1, length(obj.environment.emission_objects));
             emission_offsets = zeros(1, length(emission_motions));
             for i = 1:length(obj.environment.emission_objects)
@@ -106,8 +112,8 @@ classdef FMCWSim < handle
             
             for m = 1:Nsweep
                 [radar_pos, radar_vel] = radar_motion(obj.radar.t_max);
-                for i = 1:length(benign_motions)
-                    [obj.environment.benign_objects(i).position, obj.environment.benign_objects(i).velocity] = benign_motions{i}(obj.radar.t_max);
+                 for i = 1:length(benign_motions)
+                    [benign_positions{i}, benign_velocities{i}] = benign_motions{i}(obj.radar.t_max); % Update local positions/velocities
                 end
         
                 sig = obj.radar.tx_waveform();
@@ -115,7 +121,7 @@ classdef FMCWSim < handle
                 obj.total_received_sig = complex(zeros(size(txsig)));
                 
                 for i = 1:length(obj.environment.benign_objects)
-                    reflected_sig = benign_channel(txsig, radar_pos, obj.environment.benign_objects(i).position, radar_vel, obj.environment.benign_objects(i).velocity);
+                    reflected_sig = benign_channel(txsig, radar_pos, benign_positions{i}, radar_vel, benign_velocities{i});
                     reflected_sig = obj.environment.benign_objects(i).target(reflected_sig);
                     obj.total_received_sig = obj.total_received_sig + reflected_sig;
                 end
@@ -129,7 +135,8 @@ classdef FMCWSim < handle
                     
                     %resize the array and offset it to make it loop
                     %properly
-                    current_offset = emission_offsets(i);
+                    phase_offset = obj.environment.emission_objects(i).phase() / 360 * size(emission_received_sig, 1);
+                    current_offset = round(emission_offsets(i) + phase_offset);
                     emission_received_sig = resize(emission_received_sig, size(obj.total_received_sig, 1) + current_offset, Pattern="circular");
                     
                     % Cut down the signal to the required size after resizing
@@ -151,6 +158,8 @@ classdef FMCWSim < handle
                 xr(:, m) = obj.dechirpsig;
             end
         end
+
+        function simulateFrames
 
 
 

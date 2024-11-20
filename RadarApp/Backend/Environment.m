@@ -51,6 +51,7 @@ classdef Environment
                 params.tx_gain = emission_data(i).tx_gain;
                 params.position = emission_data(i).position;
                 params.velocity = emission_data(i).velocity;
+                params.phase = emission_data(i).phase;
                 emission_objects(i) = EmissionObject(params);
             end
         end

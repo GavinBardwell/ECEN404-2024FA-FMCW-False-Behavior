@@ -11,6 +11,7 @@ classdef EmissionObject < handle
         tx_gain % Transmit gain in dB
         position % Initial position in meters (x, y, z)
         velocity % Initial velocity in m/s (x, y, z)
+        phase
     end
     
     properties (Constant, Hidden=true)
@@ -41,6 +42,7 @@ classdef EmissionObject < handle
                 obj.tx_gain = params.tx_gain;
                 obj.position = params.position;
                 obj.velocity = params.velocity;
+                obj.phase = params.phase;
             else
                 obj.fc = 0;
                 obj.range_max = 0;
@@ -50,6 +52,7 @@ classdef EmissionObject < handle
                 obj.tx_gain = 0;
                 obj.position = [0; 0; 0];
                 obj.velocity = [0; 0; 0];
+                obj.phase = 0;
             end
         end
         
@@ -77,6 +80,9 @@ classdef EmissionObject < handle
             end
             if isfield(params, 'velocity')
                 obj.velocity = params.velocity;
+            end
+            if isfield(params, 'phase')
+                obj.velocity = params.phase;
             end
         end
         
@@ -145,6 +151,7 @@ classdef EmissionObject < handle
             returnedObject.v_max = obj.v_max;
             returnedObject.tx_power = obj.tx_power;
             returnedObject.tx_gain = obj.tx_gain;
+            returnedObject.phase = obj.phase;
         end
     end
 end

@@ -28,4 +28,3 @@ function isFalse = detectFalseBehavior(simData)
     isFalse = result;
     %%USER CODE GOES HERE
 end
-

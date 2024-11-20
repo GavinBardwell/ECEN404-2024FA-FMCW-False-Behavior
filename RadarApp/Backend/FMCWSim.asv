@@ -127,8 +127,16 @@ classdef FMCWSim < handle
                     emission_txsig = obj.environment.emission_objects(i).transmitter(emission_sig);
                     emission_received_sig = emission_channel(emission_txsig, emission_pos, radar_pos, emission_vel, radar_vel);
                     
-                    %resize the array and 
-                    emission_received_sig = resize(emission_received_sig, size(obj.total_received_sig), Pattern="circular");
+                    %resize the array and offset it to make it loop
+                    %properly
+                    current_offset = emission_offsets(i) + e;
+                    emission_received_sig = resize(emission_received_sig, size(obj.total_received_sig, 1) + current_offset, Pattern="circular");
+                    
+                    % Cut down the signal to the required size after resizing
+                    emission_received_sig = emission_received_sig(current_offset + 1 : current_offset + size(obj.total_received_sig, 1));
+
+                    % Update offset for the next loop
+                    emission_offsets(i) = mod(current_offset + size(txsig, 1), size(emission_sig, 1));
 
                     obj.total_received_sig = obj.total_received_sig + emission_received_sig;
                 end
