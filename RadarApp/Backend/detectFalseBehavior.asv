@@ -1,26 +1,25 @@
 function isFalse = detectFalseBehavior(simData)
     %{
     % sim data will be the data post fft. It will be in the form
-    % simData.resp_frames -- Resp is a 1x1 struct. Each struct contains a 1x64 cell, and each cell is a 2048x256 complex double (the frame)
+    % simData.resp -- Resp is a MxP matrix. This is the response of the input signal from FFT
     %
     % simData.rng_grid -- rng_grid is the range samples at which range-doppler response is
     %     evaluated, grid column of length M
     %
     % simData.dop_grid -- dop_grid is the frequency samples that range dop is evaluated 
     %
-    % The dataset for threshold calculation will be the 6th frame from simData.resp
+    % The dataset for threshold calculation will be the first 5 frames from simData.resp
     %}
     %USER CODE GOES HERE
 
-    % Extract the 6th frame from simData.resp for threshold calculation
-    dataset = simData.resp_frames{1}(6); % Get the 6th cell from the 1x64 cell array
-    dataset = squeeze(dataset); % Remove singleton dimensions if necessary
+    % Extract the first 5 frames from simData.resp for threshold calculation
+    dataset = simData.resp(1:5, :, :);
 
     % Calculate threshold using the threshold_calculation function
     threshold = threshold_calculation(dataset);
 
     % Calculate power vs range
-    power_vs_range = sum(abs(simData.resp{1}{6}), 2); % Sum over the Doppler dimension for the 6th frame
+    power_vs_range = sum(abs(simData.resp(::6)), 2); % Sum over the Doppler dimension
     peak = max(power_vs_range);
     mean_val = mean(power_vs_range);  % 'mean' is a MATLAB function, so using 'mean_val' to avoid conflict
     peak_to_average = peak / mean_val;
@@ -41,11 +40,11 @@ function isFalse = detectFalseBehavior(simData)
 end
 
 function threshold = threshold_calculation(dataset)
-    % Dimension of dataset is (2048, 256), calculate average peak-to-average ratio for the 6th frame
-    peak_to_average_array = zeros(size(dataset, 1), 1);
-    for i = 1:size(dataset, 1)
-        peak_to_average_array(i) = max(dataset(i, :)) / mean(dataset(i, :));
+    % Dimension of dataset is (5, M, P), calculate average peak-to-average ratio over first 5 frames
+    peak_to_average_array = zeros(640, 1);
+    for i = 1:640
+        peak_to_average_array(i) = max(dataset(1, i, :)) / mean(dataset(1, i, :));
     end
     
-    threshold = nanmean(peak_to_average_array) + 0.09;
+    threshold = mean(peak_to_average_array) + 0.09;
 end
