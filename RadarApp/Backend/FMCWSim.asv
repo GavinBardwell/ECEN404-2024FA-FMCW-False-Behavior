@@ -563,37 +563,53 @@ end
             axis(targetAxis, [min(rng_grid), max(rng_grid), min(power_vs_range_db) - 10, max(power_vs_range_db) + 10]);
         end
 
-        function saveRangeVsPowerVideo(obj, fftFrames, videoFileName)
-            % Save all frames as a video using the plotRangeVsPowerFrame function.
-            % Inputs:
-            % - fftFrames: Struct containing range-Doppler response and range grid for each frame
-            % - videoFileName: Name of the video file to save
-        
-            % Extract the number of frames
-            numFrames = size(fftFrames.resp_frames, 2);
-        
-            % Create a VideoWriter object
-            videoWriter = VideoWriter(videoFileName, 'MPEG-4');
-            videoWriter.FrameRate = 10; % Set the frame rate (adjust as needed)
-            open(videoWriter);
-        
-            % Create an invisible figure for plotting
-            figureHandle = figure('Visible', 'off'); % Invisible figure
-            targetAxis = axes('Parent', figureHandle); % Axes for plotting
-        
-            % Loop through each frame and save it to the video
-            for d = 1:numFrames
-                % Plot the current frame
-                obj.plotRangeVsPowerFrame(targetAxis, fftFrames, d, numFrames);
-        
-                % Capture the frame for video (capture the whole figure)
-                frame = getframe(figureHandle); % Capture the entire figure
-                writeVideo(videoWriter, frame); % Write the frame to the video file
-            end
-        
-            % Close the video writer and delete the invisible figure
+        function saveRangeVsPowerVideo(fftFrames, videoFileName, targetAxis)
+        % Save all frames as a video using the plotRangeVsPowerFrame function.
+        % Inputs:
+        % - resp_all_frames: Cell array containing the range-Doppler response for each frame
+        % - rng_grid_all: Cell array containing the range grid for each frame
+        % - videoFileName: Name of the video file to save
+        % - targetAxis: Optional UIAxes or axes handle for plotting the animation
+        resp_all = fftFrames.resp_frames{frameNumber};
+        dop_grid = fftFrames.dop_grid{frameNumber};
+        rng_grid = fftFrames.rng_grid{frameNumber};
+        numFrames = length(resp_all_frames);
+    
+        % Create a new figure and UIAxes if targetAxis is not provided or empty
+        if nargin < 4 || isempty(targetAxis)
+            figureHandle = figure('Name', 'Range vs Power Animation', 'NumberTitle', 'off', 'Position', [100, 100, 800, 600]);
+            targetAxis = axes('Parent', figureHandle); % Use standard axes
+        else
+            % If targetAxis is provided, assume it is part of an existing figure
+            figureHandle = ancestor(targetAxis, 'figure');
+        end
+    
+        % Create a VideoWriter object
+        videoWriter = VideoWriter(videoFileName, 'MPEG-4');
+        videoWriter.FrameRate = 10; % Set the frame rate (adjust as needed)
+        open(videoWriter);
+    
+        % Loop through each frame and save it to the video
+        for d = 1:numFrames
+            % Extract the response and range grid for the current frame
+            resp = resp_all_frames{d};
+            rng_grid = rng_grid_all{d};
+    
+            % Use the single-frame function to plot the current frame
+            plotRangeVsPowerFrame(targetAxis, resp, rng_grid, d, numFrames);
+    
+            % Capture the frame for video
+            frame = getframe(figureHandle); % Capture the entire figure
+            writeVideo(videoWriter, frame); % Write the frame to the video file
+        end
+    
+            % Close the video writer
             close(videoWriter);
-            delete(figureHandle); % Delete the invisible figure
+    
+            % Close the figure if created internally
+            if nargin < 4 || isempty(targetAxis)
+                close(figureHandle);
+            end
         end
 
         function plotRangeDopplerFrame(obj,targetGraph, fftFrames, frameNumber, numFrames)
@@ -609,113 +625,6 @@ end
             axis(targetGraph, [-obj.radar.v_max, obj.radar.v_max, 0, obj.radar.range_max]);
             colorbar(targetGraph);
         end
-
-        function saveRangeDopplerVideo(obj, fftFrames, videoFileName)
-            % Save all frames as a video without displaying any windows or graphs.
-            % Inputs:
-            % - fftFrames: Struct containing response, range grid, and Doppler grid for each frame
-            % - videoFileName: Name of the video file to save
-        
-            % Extract the data from fftFrames
-            resp_all_frames = fftFrames.resp_frames;
-            numFrames = size(resp_all_frames, 2);
-        
-            % Create a VideoWriter object
-            videoWriter = VideoWriter(videoFileName, 'MPEG-4');
-            videoWriter.FrameRate = 10; % Set the frame rate (adjust as needed)
-            open(videoWriter);
-        
-            % Create an invisible figure
-            figureHandle = figure('Visible', 'off'); % Invisible figure
-            targetGraph = axes('Parent', figureHandle); % Axes for plotting
-        
-            % Loop through each frame and save it to the video
-            for d = 1:numFrames
-
-                obj.plotRangeDopplerFrame(targetGraph, fftFrames,d, numFrames);
-        
-                % Capture the frame for video
-                frame = getframe(figureHandle); % Capture only the axes (not the whole figure)
-                writeVideo(videoWriter, frame); % Write the frame to the video file
-            end
-        
-            % Close the video writer and delete the invisible figure
-            close(videoWriter);
-            delete(figureHandle); % Delete the invisible figure
-        end
-
-        function evalFrame(obj, targetAxis, fftFrames, frameNumber, numFrames, highlight)
-    % Plot a single frame of range vs power data on the target axis with highlighting.
-    % Inputs:
-    % - targetAxis: UIAxes or axes handle for plotting
-    % - fftFrames: Struct containing range-Doppler response and range grid
-    % - frameNumber: Current frame index
-    % - numFrames: Total number of frames
-    % - highlight: Boolean value to determine if the line should be red (true) or blue (false)
-    
-    resp = fftFrames.resp_frames{frameNumber};
-    rng_grid = fftFrames.rng_grid{frameNumber};
-    
-    % Calculate the power vs range for the current frame
-    power_vs_range = sum(abs(resp), 2); % Sum over the Doppler dimension
-    power_vs_range_db = 10 * log10(power_vs_range); % Convert power to decibels
-    
-    % Plot the range vs power for the current frame
-    cla(targetAxis); % Clear the axis to prepare for the new plot
-    lineColor = 'r'; % Default to red
-    if ~highlight
-        lineColor = 'b'; % Change to blue if not highlighted
-    end
-    plot(targetAxis, rng_grid, power_vs_range_db, 'Color', lineColor, 'LineWidth', 1.5);
-    xlabel(targetAxis, 'Range (m)');
-    ylabel(targetAxis, 'Power (dB)');
-    title(targetAxis, sprintf('Range vs Power - Frame %d of %d', frameNumber, numFrames));
-    grid(targetAxis, 'on');
-    axis(targetAxis, [min(rng_grid), max(rng_grid), min(power_vs_range_db) - 10, max(power_vs_range_db) + 10]);
-        end
-        function saveDetectionVid(obj, fftFrames, videoFileName, highlightFrames)
-    % Save all frames as a video using the plotRangeVsPowerFrame function with highlighting.
-    % Inputs:
-    % - fftFrames: Struct containing range-Doppler response and range grid for each frame
-    % - videoFileName: Name of the video file to save
-    % - highlightFrames: Boolean array indicating whether each frame should be highlighted
-
-    % Extract the number of frames
-    numFrames = size(fftFrames.resp_frames, 2);
-
-    % Check that highlightFrames has the correct length
-    if length(highlightFrames) ~= numFrames
-        error('Length of highlightFrames must match the number of frames.');
-    end
-
-    % Create a VideoWriter object
-    videoWriter = VideoWriter(videoFileName, 'MPEG-4');
-    videoWriter.FrameRate = 10; % Set the frame rate (adjust as needed)
-    open(videoWriter);
-
-    % Create an invisible figure for plotting
-    figureHandle = figure('Visible', 'off'); % Invisible figure
-    targetAxis = axes('Parent', figureHandle); % Axes for plotting
-
-    % Loop through each frame and save it to the video
-    for d = 1:numFrames
-        % Determine if the frame should be highlighted
-        highlight = highlightFrames(d);
-
-        % Plot the current frame with highlighting
-        obj.evalFrame(targetAxis, fftFrames, d, numFrames, highlight);
-
-        % Capture the frame for video (capture the whole figure)
-        frame = getframe(figureHandle); % Capture the entire figure
-        writeVideo(videoWriter, frame); % Write the frame to the video file
-    end
-
-    % Close the video writer and delete the invisible figure
-    close(videoWriter);
-    delete(figureHandle); % Delete the invisible figure
-end
-
-
     end
 end
 

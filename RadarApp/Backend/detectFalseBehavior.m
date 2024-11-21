@@ -14,7 +14,7 @@ function isFalse = detectFalseBehavior(simData)
     %USER CODE GOES HERE
 
     %calculate threshold
-    threshLimit = 5;
+    threshLimit = 10;
     threshFrames = simData.resp_frames(1:threshLimit);
     
     % Initialize variables for calculations
