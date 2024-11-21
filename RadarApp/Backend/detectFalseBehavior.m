@@ -1,51 +1,57 @@
+
 function isFalse = detectFalseBehavior(simData)
     %{
-    % sim data will be the data post fft. It will be in the form
-    % simData.resp_frames -- Resp is a 1x1 struct. Each struct contains a 1x64 cell, and each cell is a 2048x256 complex double (the frame)
-    %
-    % simData.rng_grid -- rng_grid is the range samples at which range-doppler response is
-    %     evaluated, grid column of length M
-    %
-    % simData.dop_grid -- dop_grid is the frequency samples that range dop is evaluated 
-    %
-    % The dataset for threshold calculation will be the 6th frame from simData.resp
+    sim data will be the data post fft. It will be in the form
+    simData.resp_frames -- a cell of frames, Resp is a MxP matrix. This is the response of the input signal from FFT
+    
+    simData.rng_grid -- rng_grid is the range samples at which range-doppler response is
+        evaulated, grid column of length M
+    
+    simData.dop_grid -- dop_grid is the frequency samples that range dop is evaluates 
+
+    It will be also in the form of all the 
     %}
     %USER CODE GOES HERE
 
-    % Extract the 6th frame from simData.resp for threshold calculation
-    dataset = simData.resp_frames{1}(6); % Get the 6th cell from the 1x64 cell array
-    dataset = squeeze(dataset); % Remove singleton dimensions if necessary
-
-    % Calculate threshold using the threshold_calculation function
-    threshold = threshold_calculation(dataset);
-
-    % Calculate power vs range
-    power_vs_range = sum(abs(simData.resp{1}{6}), 2); % Sum over the Doppler dimension for the 6th frame
-    peak = max(power_vs_range);
-    mean_val = mean(power_vs_range);  % 'mean' is a MATLAB function, so using 'mean_val' to avoid conflict
-    peak_to_average = peak / mean_val;
+    %calculate threshold
+    threshLimit = 5;
+    threshFrames = simData.resp_frames(1:threshLimit);
     
-    % Calculate if within range
-    peak_average_threshold = threshold;
-    p_a = peak_to_average > peak_average_threshold;
-    p_a_l = peak_to_average < (peak_average_threshold - 0.49);
-    
-    % Using threshold return true or false
-    if p_a || p_a_l
-        result = true;
-    else
-        result = false;
+    % Initialize variables for calculations
+    max_values = zeros(1, threshLimit);  % To store the max of each frame
+    mean_values = zeros(1, threshLimit); % To store the mean of each frame
+
+    % Loop over the first 5 frames
+    for i = 1:size(threshFrames, 2)
+        frame_data = threshFrames{i}; % Extract the i-th frame data
+        max_values(i) = max(abs(frame_data(:))); % Take the maximum of the current frame
+        mean_values(i) = mean(abs(frame_data(:))); % Take the mean of the current frame
     end
-    isFalse = result;
+    
+    % Calculate the overall threshold
+    peak_average_threshold = mean(max_values) / mean(mean_values);
+    %end threshold calculation
+
+    % Calculate if within range
+    false_frames = zeros(1, size(simData.resp_frames, 2));
+    for i = threshLimit:size(simData.resp_frames, 2)
+        peak_average = peak_to_average(simData.resp_frames(i));
+        p_a = peak_average > peak_average_threshold;
+        p_a_l = peak_average < (peak_average_threshold - 0.49);
+        
+        % Using threshold return true or false
+        if p_a || p_a_l
+            false_frames(i) = true;
+        else
+            false_frames(i) = false;
+        end
+    end
+
+    isFalse = false_frames;
     %%USER CODE GOES HERE
 end
 
-function threshold = threshold_calculation(dataset)
-    % Dimension of dataset is (2048, 256), calculate average peak-to-average ratio for the 6th frame
-    peak_to_average_array = zeros(size(dataset, 1), 1);
-    for i = 1:size(dataset, 1)
-        peak_to_average_array(i) = max(dataset(i, :)) / mean(dataset(i, :));
-    end
-    
-    threshold = nanmean(peak_to_average_array) + 0.09;
+function val = peak_to_average(frame)
+    magnitude = abs(frame{1}(:)); % Flatten to vector
+    val = max(magnitude) / mean(magnitude);
 end
