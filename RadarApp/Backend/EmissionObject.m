@@ -12,6 +12,7 @@ classdef EmissionObject < handle
         position % Initial position in meters (x, y, z)
         velocity % Initial velocity in m/s (x, y, z)
         phase
+        frameStart;
     end
     
     properties (Constant, Hidden=true)
@@ -43,6 +44,7 @@ classdef EmissionObject < handle
                 obj.position = params.position;
                 obj.velocity = params.velocity;
                 obj.phase = params.phase;
+                obj.frameStart = params.frameStart;
             else
                 obj.fc = 0;
                 obj.range_max = 0;
@@ -53,6 +55,7 @@ classdef EmissionObject < handle
                 obj.position = [0; 0; 0];
                 obj.velocity = [0; 0; 0];
                 obj.phase = 0;
+                obj.frameStart = 0;
             end
         end
         
@@ -82,7 +85,10 @@ classdef EmissionObject < handle
                 obj.velocity = params.velocity;
             end
             if isfield(params, 'phase')
-                obj.velocity = params.phase;
+                obj.phase = params.phase;
+            end
+            if isfield(params, 'frameStart')
+                obj.frameStart = params.frameStart;
             end
         end
         
@@ -152,6 +158,7 @@ classdef EmissionObject < handle
             returnedObject.tx_power = obj.tx_power;
             returnedObject.tx_gain = obj.tx_gain;
             returnedObject.phase = obj.phase;
+            returnedObject.frameStart = obj.frameStart;
         end
     end
 end

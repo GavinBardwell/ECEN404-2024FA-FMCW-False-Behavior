@@ -52,6 +52,7 @@ classdef Environment
                 params.position = emission_data(i).position;
                 params.velocity = emission_data(i).velocity;
                 params.phase = emission_data(i).phase;
+                params.frameStart = emission_data(i).frameStart;
                 emission_objects(i) = EmissionObject(params);
             end
         end

@@ -160,102 +160,105 @@ classdef FMCWSim < handle
         end
 
         function xr_frames = simulateFrames(obj, Nframes, Nsweep)
-            if nargin < 2
-                Nsweep = 64;
-                Nframes = 1;
-            end
-        
-            obj.environment.setTargets(obj.radar.fc);
-            waveform_samples = round(obj.radar.fs * obj.radar.t_max);
-            % Initialize 3D array to hold all frames
-            xr_frames = complex(zeros(waveform_samples, Nsweep, Nframes));
+    if nargin < 2
+        Nsweep = 64;
+        Nframes = 1;
+    end
 
-            if not(isnan(obj.environment.floor))
-                clutter = obj.createGround();
-            else
-                clutter = []; % No clutter if floor is undefined
-            end
-            
-            benign_channel = phased.FreeSpace('PropagationSpeed', obj.radar.c, ...
-                'OperatingFrequency', obj.radar.fc, 'SampleRate', obj.radar.fs, ...
-                'TwoWayPropagation', true);
-            emission_channel = phased.FreeSpace('PropagationSpeed', obj.radar.c, ...
-                'OperatingFrequency', obj.radar.fc, 'SampleRate', obj.radar.fs, ...
-                'TwoWayPropagation', false);
-            
-            radar_motion = phased.Platform('InitialPosition', obj.radar.radar_position, 'Velocity', obj.radar.radar_velocity);
+    obj.environment.setTargets(obj.radar.fc);
+    waveform_samples = round(obj.radar.fs * obj.radar.t_max);
+    % Initialize 3D array to hold all frames
+    xr_frames = complex(zeros(waveform_samples, Nsweep, Nframes));
 
-            benign_motions = cell(1, length(obj.environment.benign_objects));
-            benign_positions = cell(1, length(obj.environment.benign_objects)); % Internal positions
-            benign_velocities = cell(1, length(obj.environment.benign_objects)); % Internal velocities
+    if not(isnan(obj.environment.floor))
+        clutter = obj.createGround();
+    else
+        clutter = []; % No clutter if floor is undefined
+    end
+
+    benign_channel = phased.FreeSpace('PropagationSpeed', obj.radar.c, ...
+        'OperatingFrequency', obj.radar.fc, 'SampleRate', obj.radar.fs, ...
+        'TwoWayPropagation', true);
+    emission_channel = phased.FreeSpace('PropagationSpeed', obj.radar.c, ...
+        'OperatingFrequency', obj.radar.fc, 'SampleRate', obj.radar.fs, ...
+        'TwoWayPropagation', false);
+
+    radar_motion = phased.Platform('InitialPosition', obj.radar.radar_position, 'Velocity', obj.radar.radar_velocity);
+
+    benign_motions = cell(1, length(obj.environment.benign_objects));
+    benign_positions = cell(1, length(obj.environment.benign_objects)); % Internal positions
+    benign_velocities = cell(1, length(obj.environment.benign_objects)); % Internal velocities
+    for i = 1:length(obj.environment.benign_objects)
+        benign_motions{i} = phased.Platform('InitialPosition', obj.environment.benign_objects(i).position, 'Velocity', obj.environment.benign_objects(i).velocity);
+        benign_positions{i} = obj.environment.benign_objects(i).position; % Initialize with current positions
+        benign_velocities{i} = obj.environment.benign_objects(i).velocity; % Initialize with current velocities
+    end
+
+    emission_motions = cell(1, length(obj.environment.emission_objects));
+    emission_offsets = zeros(1, length(emission_motions));
+    phase_offsets = zeros(1, length(obj.environment.emission_objects));
+    for i = 1:length(obj.environment.emission_objects)
+        emission_motions{i} = phased.Platform('InitialPosition', obj.environment.emission_objects(i).position, 'Velocity', obj.environment.emission_objects(i).velocity);
+        phase_offsets(i) = round(obj.environment.emission_objects(i).phase() / 360 * waveform_samples);
+    end
+
+    % Actual simulation loop
+    for frame = 1:Nframes
+        xr = complex(zeros(waveform_samples, Nsweep)); % Initialize for each frame  
+        for m = 1:Nsweep
+            [radar_pos, radar_vel] = radar_motion(obj.radar.t_max);
+            for i = 1:length(benign_motions)
+                [benign_positions{i}, benign_velocities{i}] = benign_motions{i}(obj.radar.t_max); % Update local positions/velocities
+            end
+
+            sig = obj.radar.tx_waveform();
+            txsig = obj.radar.transmitter(sig);
+            obj.total_received_sig = complex(zeros(size(txsig)));
+
             for i = 1:length(obj.environment.benign_objects)
-                benign_motions{i} = phased.Platform('InitialPosition', obj.environment.benign_objects(i).position, 'Velocity', obj.environment.benign_objects(i).velocity);
-                benign_positions{i} = obj.environment.benign_objects(i).position; % Initialize with current positions
-                benign_velocities{i} = obj.environment.benign_objects(i).velocity; % Initialize with current velocities
+                reflected_sig = benign_channel(txsig, radar_pos, benign_positions{i}, radar_vel, benign_velocities{i});
+                reflected_sig = obj.environment.benign_objects(i).target(reflected_sig);
+                obj.total_received_sig = obj.total_received_sig + reflected_sig;
             end
 
-            emission_motions = cell(1, length(obj.environment.emission_objects));
-            emission_offsets = zeros(1, length(emission_motions));
-            phase_offsets = zeros(1, length(obj.environment.emission_objects));
-            for i = 1:length(obj.environment.emission_objects)
-                emission_motions{i} = phased.Platform('InitialPosition', obj.environment.emission_objects(i).position, 'Velocity', obj.environment.emission_objects(i).velocity);
-                phase_offsets(i) = round(obj.environment.emission_objects(i).phase() / 360 * waveform_samples);
-            end
+            for i = 1:length(emission_motions)
+                % Only process emission_objects if the current frame >= frameStart
+                if frame >= obj.environment.emission_objects(i).frameStart
+                    [emission_pos, emission_vel] = emission_motions{i}(obj.radar.t_max);
+                    emission_sig = obj.environment.emission_objects(i).waveform();
+                    emission_txsig = obj.environment.emission_objects(i).transmitter(emission_sig);
+                    emission_received_sig = emission_channel(emission_txsig, emission_pos, radar_pos, emission_vel, radar_vel);
 
-            %actual simulation loop
-            for frame = 1:Nframes
-                xr = complex(zeros(waveform_samples, Nsweep)); % Initialize for each frame  
-                for m = 1:Nsweep
-                    [radar_pos, radar_vel] = radar_motion(obj.radar.t_max);
-                     for i = 1:length(benign_motions)
-                        [benign_positions{i}, benign_velocities{i}] = benign_motions{i}(obj.radar.t_max); % Update local positions/velocities
-                    end
-            
-                    sig = obj.radar.tx_waveform();
-                    txsig = obj.radar.transmitter(sig);
-                    obj.total_received_sig = complex(zeros(size(txsig)));
-                    
-                    for i = 1:length(obj.environment.benign_objects)
-                        reflected_sig = benign_channel(txsig, radar_pos, benign_positions{i}, radar_vel, benign_velocities{i});
-                        reflected_sig = obj.environment.benign_objects(i).target(reflected_sig);
-                        obj.total_received_sig = obj.total_received_sig + reflected_sig;
-                    end
-            
-                    for i = 1:length(emission_motions)
-                        %do the actual simulartion portion of it
-                        [emission_pos, emission_vel] = emission_motions{i}(obj.radar.t_max);
-                        emission_sig = obj.environment.emission_objects(i).waveform();
-                        emission_txsig = obj.environment.emission_objects(i).transmitter(emission_sig);
-                        emission_received_sig = emission_channel(emission_txsig, emission_pos, radar_pos, emission_vel, radar_vel);
-                        
-                        %resize the array and offset it to make it loop
-                        %properly
-                        phase_offset = obj.environment.emission_objects(i).phase() / 360 * size(emission_received_sig, 1);
-                        current_offset = round(emission_offsets(i) + phase_offset);
-                        emission_received_sig = resize(emission_received_sig, size(obj.total_received_sig, 1) + current_offset, Pattern="circular");
-                        
-                        % Cut down the signal to the required size after resizing
-                        emission_received_sig = emission_received_sig(current_offset + 1 : current_offset + size(obj.total_received_sig, 1));
-    
-                        % Update offset for the next loop
-                        emission_offsets(i) = mod(current_offset + size(txsig, 1), size(emission_sig, 1));
-    
-                        obj.total_received_sig = obj.total_received_sig + emission_received_sig;
-                    end
-                                    % Create clutter
-                    if ~isempty(clutter)
-                        clutter_returns = sum(clutter(), 2); % Sum across channels if necessary
-                        obj.total_received_sig = obj.total_received_sig + clutter_returns;
-                    end
-                    obj.total_received_sig = obj.radar.receiver(obj.total_received_sig);
-                    obj.dechirpsig = dechirp(obj.total_received_sig, sig);
+                    % Resize the array and offset it to make it loop properly
+                    phase_offset = obj.environment.emission_objects(i).phase() / 360 * size(emission_received_sig, 1);
+                    current_offset = round(emission_offsets(i) + phase_offset);
+                    emission_received_sig = resize(emission_received_sig, size(obj.total_received_sig, 1) + current_offset, Pattern="circular");
 
-                    xr(:, m) = obj.dechirpsig;
+                    % Cut down the signal to the required size after resizing
+                    emission_received_sig = emission_received_sig(current_offset + 1 : current_offset + size(obj.total_received_sig, 1));
+
+                    % Update offset for the next loop
+                    emission_offsets(i) = mod(current_offset + size(txsig, 1), size(emission_sig, 1));
+
+                    obj.total_received_sig = obj.total_received_sig + emission_received_sig;
                 end
-                % Store the current frame in the 3D array
-                xr_frames(:, :, frame) = xr;
             end
+
+            % Create clutter
+            if ~isempty(clutter)
+                clutter_returns = sum(clutter(), 2); % Sum across channels if necessary
+                obj.total_received_sig = obj.total_received_sig + clutter_returns;
+            end
+            obj.total_received_sig = obj.radar.receiver(obj.total_received_sig);
+            obj.dechirpsig = dechirp(obj.total_received_sig, sig);
+
+            xr(:, m) = obj.dechirpsig;
         end
+        % Store the current frame in the 3D array
+        xr_frames(:, :, frame) = xr;
+    end
+end
+
 
 
 

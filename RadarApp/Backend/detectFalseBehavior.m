@@ -22,10 +22,11 @@ function isFalse = detectFalseBehavior(simData)
     mean_values = zeros(1, threshLimit); % To store the mean of each frame
 
     % Loop over the first 5 frames
+    %% 
     for i = 1:size(threshFrames, 2)
-        frame_data = threshFrames{i}; % Extract the i-th frame data
-        max_values(i) = max(abs(frame_data(:))); % Take the maximum of the current frame
-        mean_values(i) = mean(abs(frame_data(:))); % Take the mean of the current frame
+        frame_data = abs(threshFrames{i}); % Extract the i-th frame data
+        max_values(i) = log(max(frame_data(:))); % Take the maximum of the current frame
+        mean_values(i) = log(mean(frame_data(:))); % Take the mean of the current frame
     end
     
     % Calculate the overall threshold
@@ -36,8 +37,8 @@ function isFalse = detectFalseBehavior(simData)
     false_frames = zeros(1, size(simData.resp_frames, 2));
     for i = threshLimit:size(simData.resp_frames, 2)
         peak_average = peak_to_average(simData.resp_frames(i));
-        p_a = peak_average > peak_average_threshold;
-        p_a_l = peak_average < (peak_average_threshold - 0.49);
+        p_a = peak_average > peak_average_threshold + .5;
+        p_a_l = peak_average < (peak_average_threshold - .5);
         
         % Using threshold return true or false
         if p_a || p_a_l
@@ -53,5 +54,5 @@ end
 
 function val = peak_to_average(frame)
     magnitude = abs(frame{1}(:)); % Flatten to vector
-    val = max(magnitude) / mean(magnitude);
+    val = log(max(magnitude)) / log(mean(magnitude));
 end

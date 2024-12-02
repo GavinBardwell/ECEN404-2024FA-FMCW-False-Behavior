@@ -24,7 +24,7 @@ emission_objects(1).tx_gain = 9;           % Transmit gain in dB
 emission_objects(1).position = [.15; 0; 0];  % Initial position in meters
 emission_objects(1).velocity = [0; 0; 0];   % Initial velocity in m/s
 emission_objects(1).phase = 0;
-
+emission_objects(1).frameStart = 0;
 benign_objects = [];
 % Benign Objects
 benign_objects(1).position = [10; 0; 0];    % Initial position in meters
